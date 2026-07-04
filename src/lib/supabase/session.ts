@@ -68,9 +68,18 @@ export async function updateSession(request: NextRequest) {
   }
 
   if (user && (path === "/login" || path === "/signup")) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/dashboard";
-    return NextResponse.redirect(url);
+    // Only bounce to /dashboard if the user has a client profile; otherwise
+    // /dashboard would redirect straight back here in an infinite loop.
+    const { data: client } = await supabase
+      .from("clients")
+      .select("id")
+      .eq("id", user.id)
+      .single();
+    if (client) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/dashboard";
+      return NextResponse.redirect(url);
+    }
   }
 
   return supabaseResponse;

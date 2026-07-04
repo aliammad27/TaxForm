@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CalendarClock, Gavel } from "lucide-react";
+import { CalendarClock } from "lucide-react";
 import { requireClient } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { STATUS_LABELS } from "@/lib/appeal-status";
@@ -109,7 +109,6 @@ export default async function AppealsPage() {
         <CardContent>
           {appeals.length === 0 ? (
             <EmptyState
-              icon={Gavel}
               title="No appeals yet"
               description={
                 properties.length === 0

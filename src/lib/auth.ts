@@ -24,7 +24,13 @@ export async function requireClient(): Promise<ClientProfile> {
     .eq("id", user.id)
     .single();
 
-  if (!profile) redirect("/login");
+  if (!profile) {
+    // A signed-in user without a clients row (e.g. migrations not applied)
+    // must be signed out, otherwise /login redirects back to /dashboard
+    // and the two redirects loop forever.
+    await supabase.auth.signOut();
+    redirect("/login");
+  }
   return profile as ClientProfile;
 }
 

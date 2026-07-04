@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CalendarClock, Check, Gavel, Inbox } from "lucide-react";
+import { CalendarClock, Check } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { STATUS_LABELS, STATUS_ORDER } from "@/lib/appeal-status";
 import { nextAppealWindow } from "@/lib/appeal-window";
@@ -107,10 +107,10 @@ export default async function AdminDashboardPage() {
         {STATUS_ORDER.map((s) => (
           <Card key={s} size="sm">
             <CardContent className="space-y-1">
-              <p className="text-xs font-medium text-muted-foreground">
+              <p className="font-mono text-xs tracking-wider text-muted-foreground uppercase">
                 {STATUS_LABELS[s]}
               </p>
-              <p className="font-heading text-2xl font-bold">
+              <p className="text-2xl font-semibold tabular-nums">
                 {byStatus.get(s) ?? 0}
               </p>
             </CardContent>
@@ -129,7 +129,6 @@ export default async function AdminDashboardPage() {
           <CardContent>
             {needsFiling.length === 0 ? (
               <EmptyState
-                icon={Inbox}
                 title="Nothing waiting to be filed"
                 className="py-6"
               />
@@ -170,7 +169,6 @@ export default async function AdminDashboardPage() {
           <CardContent>
             {upcomingHearings.length === 0 ? (
               <EmptyState
-                icon={CalendarClock}
                 title="No hearings scheduled"
                 className="py-6"
               />
@@ -199,7 +197,7 @@ export default async function AdminDashboardPage() {
         </CardHeader>
         <CardContent>
           {appeals.length === 0 ? (
-            <EmptyState icon={Gavel} title="No appeals yet" className="py-6" />
+            <EmptyState title="No appeals yet" className="py-6" />
           ) : (
             <Table>
               <TableHeader>

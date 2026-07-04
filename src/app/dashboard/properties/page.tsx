@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { Building2 } from "lucide-react";
 import { requireClient } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import {
@@ -73,7 +72,6 @@ export default async function PropertiesPage() {
         <CardContent>
           {properties.length === 0 ? (
             <EmptyState
-              icon={Building2}
               title="No properties yet"
               description="Search above to add your first property."
             />

@@ -22,13 +22,9 @@ export default function SignupPage() {
   const [state, action, pending] = useActionState(signUp, initialState);
 
   return (
-    <main className="relative flex min-h-screen flex-col items-center justify-center gap-6 bg-muted/40 p-4">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(50rem_25rem_at_50%_-10%,--alpha(var(--color-primary)/8%),transparent)]"
-      />
-      <Logo className="relative" />
-      <Card className="w-full max-w-md shadow-lg">
+    <main className="flex min-h-screen flex-col items-center justify-center gap-6 bg-muted/40 p-4">
+      <Logo />
+      <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="text-lg">Create an account</CardTitle>
           <CardDescription>
