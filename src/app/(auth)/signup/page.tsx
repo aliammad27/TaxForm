@@ -42,11 +42,13 @@ export default function SignupPage({
   const [state, action, pending] = useActionState(signUp, initialState);
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-6 bg-muted/40 p-4">
-      <Logo />
-      <Card className="w-full max-w-md">
+    <main className="flex min-h-screen flex-col items-center justify-center gap-7 bg-sidebar p-6">
+      <Logo className="text-[28px]" />
+      <Card className="w-full max-w-[420px] shadow-[0_1px_2px_oklch(0.23_0.012_120_/_0.04),0_16px_40px_-20px_oklch(0.23_0.012_120_/_0.15)]">
         <CardHeader>
-          <CardTitle className="text-lg">Create an account</CardTitle>
+          <CardTitle className="font-serif text-2xl font-normal">
+            Create an account
+          </CardTitle>
           <CardDescription>
             Start appealing your Pennsylvania property assessment.
           </CardDescription>
@@ -82,7 +84,7 @@ export default function SignupPage({
               </Select>
             </div>
             {state.error && <p className="text-sm text-destructive">{state.error}</p>}
-            <Button type="submit" className="w-full" disabled={pending}>
+            <Button type="submit" className="h-[42px] w-full" disabled={pending}>
               {pending ? "Creating account..." : "Create account"}
             </Button>
           </form>
@@ -97,6 +99,9 @@ export default function SignupPage({
           </p>
         </CardContent>
       </Card>
+      <p className="font-mono text-[11.5px] text-muted-foreground">
+        Free score first. Appeal letter when you are ready.
+      </p>
     </main>
   );
 }

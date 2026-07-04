@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { AlertTriangle, ArrowLeft, FileText } from "lucide-react";
 import { requireClient } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { computeSavingsScore } from "@/lib/savings";
@@ -80,12 +79,11 @@ export default async function AppealDetailPage({
           href="/dashboard/appeals"
           className="inline-flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
         >
-          <ArrowLeft className="size-3.5" />
-          Appeals
+          ← Appeals
         </Link>
         <div className="mt-3 flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h1 className="font-heading text-2xl font-bold tracking-tight">
+            <h1 className="font-serif text-[32px] font-normal tracking-[-0.01em]">
               {parcel?.full_address ?? appeal.parid}
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
@@ -99,7 +97,7 @@ export default async function AppealDetailPage({
 
       {letterDoc && (
         <div className="flex gap-3 rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm">
-          <AlertTriangle className="mt-0.5 size-4 shrink-0 text-amber-600" />
+          <span className="font-mono font-semibold text-[oklch(0.5_0.12_70)]">!</span>
           <div>
             <p className="font-medium text-amber-900 dark:text-amber-200">
               Appeal letter needs review before filing
@@ -326,7 +324,6 @@ export default async function AppealDetailPage({
                 {documents.map((d) => (
                   <li key={d.id} className="flex items-center justify-between gap-3">
                     <span className="flex min-w-0 items-center gap-2">
-                      <FileText className="size-4 shrink-0 text-muted-foreground" />
                     <span className="truncate">
                       {d.original_name ?? d.type}
                     </span>

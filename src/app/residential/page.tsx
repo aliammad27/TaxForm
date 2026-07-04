@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
 import { AddressSearchForm } from "@/components/address-search-form";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
@@ -53,7 +52,8 @@ export default async function ResidentialPage() {
                 For homeowners
               </p>
               <h1 className="mt-5 font-serif text-5xl leading-[1.05] tracking-tight text-balance sm:text-6xl">
-                Find out if your home is carrying too much tax burden.
+                Find out if your home is carrying{" "}
+                <em className="text-primary">too much</em> tax burden.
               </h1>
               <p className="mt-6 max-w-lg text-lg text-muted-foreground">
                 Equarra checks your home against recent comparable sales, applies
@@ -68,7 +68,7 @@ export default async function ResidentialPage() {
               />
             </div>
 
-            <Card>
+            <Card className="shadow-[0_1px_2px_oklch(0.23_0.012_120_/_0.04),0_12px_32px_-16px_oklch(0.23_0.012_120_/_0.12)]">
               <CardHeader>
                 <CardTitle>Single-family example</CardTitle>
                 <CardDescription>
@@ -108,7 +108,7 @@ export default async function ResidentialPage() {
         <section className="mx-auto grid w-full max-w-6xl gap-10 px-6 py-16 sm:py-24 lg:grid-cols-[0.8fr_1.2fr]">
           <div>
             <p className="font-mono text-xs tracking-widest text-muted-foreground uppercase">
-              Homeowner appeal kit
+              01 — Homeowner appeal kit
             </p>
             <h2 className="mt-4 font-serif text-3xl tracking-tight sm:text-4xl">
               The useful parts of an appeal, without the legal fog.
@@ -130,7 +130,7 @@ export default async function ResidentialPage() {
         <section className="border-y bg-card">
           <div className="mx-auto w-full max-w-6xl px-6 py-16 sm:py-24">
             <p className="font-mono text-xs tracking-widest text-muted-foreground uppercase">
-              Pricing
+              02 — Pricing
             </p>
             <h2 className="mt-4 font-serif text-3xl tracking-tight sm:text-4xl">
               Start free. Choose how much help you want.
@@ -154,7 +154,7 @@ export default async function ResidentialPage() {
                     render={<Link href="/signup?path=residential" />}
                   >
                     Create DIY account
-                    <ArrowRight data-icon="inline-end" />
+                    <span className="font-mono">→</span>
                   </Button>
                 </CardContent>
               </Card>
@@ -177,7 +177,7 @@ export default async function ResidentialPage() {
                     render={<Link href="/signup?path=residential&tier=full_service" />}
                   >
                     Request full-service help
-                    <ArrowRight data-icon="inline-end" />
+                    <span className="font-mono">→</span>
                   </Button>
                 </CardContent>
               </Card>

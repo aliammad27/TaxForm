@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
 import { AddressSearchForm } from "@/components/address-search-form";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
@@ -67,7 +66,8 @@ export default async function CommercialPage() {
                 For property owners
               </p>
               <h1 className="mt-5 font-serif text-5xl leading-[1.05] tracking-tight text-balance sm:text-6xl">
-                Commercial appeals need both comps and operating reality.
+                Commercial appeals need both comps{" "}
+                <em className="text-primary">and</em> operating reality.
               </h1>
               <p className="mt-6 max-w-lg text-lg text-muted-foreground">
                 Equarra combines Pennsylvania CLR math with commercial comparable
@@ -82,7 +82,7 @@ export default async function CommercialPage() {
               />
             </div>
 
-            <Card>
+            <Card className="shadow-[0_1px_2px_oklch(0.23_0.012_120_/_0.04),0_12px_32px_-16px_oklch(0.23_0.012_120_/_0.12)]">
               <CardHeader>
                 <CardTitle>Multifamily example</CardTitle>
                 <CardDescription>
@@ -129,7 +129,7 @@ export default async function CommercialPage() {
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
               <p className="font-mono text-xs tracking-widest text-muted-foreground uppercase">
-                Commercial workflow
+                01 — Commercial workflow
               </p>
               <h2 className="mt-4 font-serif text-3xl tracking-tight sm:text-4xl">
                 Built for owners with operating statements and multiple parcels.
@@ -137,7 +137,7 @@ export default async function CommercialPage() {
             </div>
             <Button render={<Link href="/signup?path=commercial" />}>
               Start commercial review
-              <ArrowRight data-icon="inline-end" />
+              <span className="font-mono">→</span>
             </Button>
           </div>
           <dl className="mt-10 grid gap-x-12 sm:grid-cols-2">
@@ -155,7 +155,7 @@ export default async function CommercialPage() {
         <section className="border-y bg-card">
           <div className="mx-auto w-full max-w-6xl px-6 py-16 sm:py-24">
             <p className="font-mono text-xs tracking-widest text-muted-foreground uppercase">
-              Pricing
+              02 — Pricing
             </p>
             <h2 className="mt-4 font-serif text-3xl tracking-tight sm:text-4xl">
               Choose contingency or full-service support.
@@ -179,7 +179,7 @@ export default async function CommercialPage() {
                     render={<Link href="/signup?path=commercial" />}
                   >
                     Create commercial account
-                    <ArrowRight data-icon="inline-end" />
+                    <span className="font-mono">→</span>
                   </Button>
                 </CardContent>
               </Card>
@@ -202,7 +202,7 @@ export default async function CommercialPage() {
                     render={<Link href="/signup?path=commercial&tier=full_service" />}
                   >
                     Request full-service review
-                    <ArrowRight data-icon="inline-end" />
+                    <span className="font-mono">→</span>
                   </Button>
                 </CardContent>
               </Card>

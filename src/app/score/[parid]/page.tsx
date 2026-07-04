@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowRight } from "lucide-react";
 import { computeSavingsScore } from "@/lib/savings";
 import type { ParcelSummary } from "@/lib/parcels";
 import { Button } from "@/components/ui/button";
@@ -63,11 +62,11 @@ export default async function ScorePage({
     <div className="flex min-h-screen flex-col">
       <SiteHeader />
 
-      <main className="mx-auto w-full max-w-4xl flex-1 px-6 py-14">
+      <main className="mx-auto w-full max-w-4xl flex-1 px-8 py-16">
         <p className="font-mono text-xs tracking-widest text-muted-foreground uppercase">
           Savings report · Tax year {score.tax_year} · Parcel {score.parid}
         </p>
-        <h1 className="mt-3 font-serif text-4xl tracking-tight">
+        <h1 className="mt-4 font-serif text-[46px] leading-tight tracking-[-0.01em]">
           {subject.full_address}
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
@@ -268,7 +267,7 @@ export default async function ScorePage({
             </p>
             <Button size="lg" className="mt-5 h-11 px-6" render={<Link href={signupHref} />}>
               {commercial ? "Start commercial review" : "Start my appeal"}
-              <ArrowRight data-icon="inline-end" />
+              <span className="font-mono">→</span>
             </Button>
           </div>
         ) : (

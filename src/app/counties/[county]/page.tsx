@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowRight, CalendarClock } from "lucide-react";
 import { getPool } from "@/lib/db";
 import { getAppealWindowFromDb } from "@/lib/counties/data";
 import { STEB_2026, appealWedgePct, countyFromSlug } from "@/lib/steb";
@@ -110,18 +109,18 @@ export default async function CountyLandingPage({
     <div className="flex min-h-screen flex-col">
       <SiteHeader />
 
-      <main className="mx-auto w-full max-w-4xl flex-1 px-6 py-14">
+      <main className="mx-auto w-full max-w-4xl flex-1 px-8 py-16">
         <div className="flex flex-wrap items-center gap-3">
           <p className="font-mono text-xs tracking-widest text-muted-foreground uppercase">
             Property tax appeals
           </p>
           {isLive ? (
-            <Badge>Live on TaxForm</Badge>
+            <Badge>Live on Equarra</Badge>
           ) : (
             <Badge variant="secondary">Coming soon</Badge>
           )}
         </div>
-        <h1 className="mt-3 font-serif text-4xl tracking-tight">
+        <h1 className="mt-4 font-serif text-[46px] leading-tight tracking-[-0.01em]">
           {county} County, Pennsylvania
         </h1>
         {wedge != null ? (
@@ -177,7 +176,6 @@ export default async function CountyLandingPage({
           <Card className="mt-8">
             <CardContent className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
               <span className="flex items-center gap-2 font-medium">
-                <CalendarClock className="size-4" />
                 {window.boardName}
               </span>
               <span className="text-muted-foreground">
@@ -230,7 +228,7 @@ export default async function CountyLandingPage({
                 />
                 <Button type="submit" size="lg" className="h-11">
                   Search
-                  <ArrowRight data-icon="inline-end" />
+                  <span className="font-mono">→</span>
                 </Button>
               </form>
             </>
@@ -253,7 +251,7 @@ export default async function CountyLandingPage({
               </p>
               <Button render={<Link href="/counties" />} variant="outline" className="mt-4">
                 View all counties
-                <ArrowRight data-icon="inline-end" />
+                <span className="font-mono">→</span>
               </Button>
             </>
           )}
@@ -271,11 +269,11 @@ export default async function CountyLandingPage({
           <div className="mt-5 flex flex-col gap-3 sm:flex-row">
             <Button render={<Link href="/residential" />}>
               Check my home
-              <ArrowRight data-icon="inline-end" />
+              <span className="font-mono">→</span>
             </Button>
             <Button variant="outline" render={<Link href="/commercial" />}>
               Check my property
-              <ArrowRight data-icon="inline-end" />
+              <span className="font-mono">→</span>
             </Button>
           </div>
         </section>

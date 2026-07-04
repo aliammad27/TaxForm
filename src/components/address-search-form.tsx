@@ -1,4 +1,3 @@
-import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -30,7 +29,7 @@ export function AddressSearchForm({
         />
         <Button type="submit" size="lg" className="h-11 px-5">
           {buttonLabel}
-          <ArrowRight data-icon="inline-end" />
+          <span className="font-mono">→</span>
         </Button>
       </form>
       {helperText && (

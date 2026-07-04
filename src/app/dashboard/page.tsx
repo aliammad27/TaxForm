@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { ArrowRight, Plus } from "lucide-react";
 import { requireClient } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import {
@@ -43,7 +42,7 @@ export default async function DashboardPage() {
         description="Track your properties and appeals at a glance."
       >
         <Button render={<Link href="/dashboard/properties" />}>
-          <Plus data-icon="inline-start" />
+          <span className="font-mono">+</span>
           Add a property
         </Button>
       </PageHeader>
@@ -68,7 +67,7 @@ export default async function DashboardPage() {
         <CardContent>
           <Button variant="outline" render={<Link href="/dashboard/documents" />}>
             {commercialTier ? "Upload operating documents" : "Upload condition photos"}
-            <ArrowRight data-icon="inline-end" />
+            <span className="font-mono">→</span>
           </Button>
         </CardContent>
       </Card>
@@ -92,7 +91,7 @@ export default async function DashboardPage() {
                 render={<Link href="/dashboard/properties" />}
               >
                 Add a property
-                <ArrowRight data-icon="inline-end" />
+                <span className="font-mono">→</span>
               </Button>
             </EmptyState>
           ) : (

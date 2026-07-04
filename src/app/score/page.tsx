@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
 import { searchParcels } from "@/lib/parcels";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,11 +29,11 @@ export default async function ScoreSearchPage({
     <div className="flex min-h-screen flex-col">
       <SiteHeader />
 
-      <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-14">
+      <main className="mx-auto w-full max-w-3xl flex-1 px-8 py-16">
         <p className="font-mono text-xs tracking-widest text-muted-foreground uppercase">
           Free savings score
         </p>
-        <h1 className="mt-3 font-serif text-4xl tracking-tight">
+        <h1 className="mt-4 font-serif text-[46px] leading-tight tracking-[-0.01em]">
           Find your property
         </h1>
         <p className="mt-3 text-muted-foreground">
@@ -94,7 +93,7 @@ export default async function ScoreSearchPage({
                     render={<Link href={`/score/${p.parid}`} />}
                   >
                     Get savings score
-                    <ArrowRight data-icon="inline-end" />
+                    <span className="font-mono">→</span>
                   </Button>
                 </li>
               ))}

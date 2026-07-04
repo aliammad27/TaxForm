@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { Download } from "lucide-react";
 import { requireClient } from "@/lib/auth";
 import { getPortfolio } from "@/lib/portfolio";
 import { STATUS_LABELS } from "@/lib/appeal-status";
@@ -43,7 +42,7 @@ export default async function PortfolioPage() {
         description="Assessment exposure and appeal opportunity across every property you track."
       >
         <Button variant="outline" render={<a href="/api/portfolio/export" />}>
-          <Download data-icon="inline-start" />
+          <span className="font-mono">↓</span>
           Export CSV
         </Button>
       </PageHeader>

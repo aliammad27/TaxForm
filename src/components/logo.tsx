@@ -12,11 +12,11 @@ export function Logo({
     <Link
       href={href}
       className={cn(
-        "font-serif text-2xl leading-none tracking-tight text-foreground",
+        "font-serif text-[26px] leading-none tracking-[-0.01em] text-foreground",
         className
       )}
     >
-      TaxForm
+      Equarra
       <span className="text-primary">*</span>
     </Link>
   );

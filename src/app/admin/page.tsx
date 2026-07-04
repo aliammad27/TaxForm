@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { CalendarClock, Check } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { STATUS_LABELS, STATUS_ORDER } from "@/lib/appeal-status";
 import { DEFAULT_COUNTY, getCountyAdapter } from "@/lib/counties/registry";
@@ -115,7 +114,6 @@ export default async function AdminDashboardPage() {
         description="Pipeline, deadlines, and evidence checklists across all client appeals."
       >
         <Badge variant={window.windowOpen ? "default" : "secondary"}>
-          <CalendarClock />
           {window.windowOpen ? "Filing window OPEN" : "Filing window closed"} — tax
           year {window.taxYear} deadline {window.filingDeadline}
         </Badge>
@@ -271,7 +269,7 @@ export default async function AdminDashboardPage() {
                             variant={c.done ? "default" : "outline"}
                             className="text-xs"
                           >
-                            {c.done && <Check />}
+                            {c.done && "✓ "}
                             {c.label}
                           </Badge>
                         ))}

@@ -20,14 +20,14 @@ function LoginForm() {
   const [mlState, mlAction, mlPending] = useActionState(signInWithMagicLink, initialState);
 
   return (
-    <Card className="w-full max-w-md">
+    <Card className="w-full max-w-[420px] shadow-[0_1px_2px_oklch(0.23_0.012_120_/_0.04),0_16px_40px_-20px_oklch(0.23_0.012_120_/_0.15)]">
       <CardHeader>
-        <CardTitle className="text-lg">Welcome back</CardTitle>
+        <CardTitle className="font-serif text-2xl font-normal">Welcome back</CardTitle>
         <CardDescription>Access your property tax appeal dashboard</CardDescription>
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="password">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-2 bg-muted p-[3px]">
             <TabsTrigger value="password">Password</TabsTrigger>
             <TabsTrigger value="magic">Magic link</TabsTrigger>
           </TabsList>
@@ -43,7 +43,7 @@ function LoginForm() {
                 <Input id="password" name="password" type="password" required />
               </div>
               {pwState.error && <p className="text-sm text-destructive">{pwState.error}</p>}
-              <Button type="submit" className="w-full" disabled={pwPending}>
+              <Button type="submit" className="h-[42px] w-full" disabled={pwPending}>
                 {pwPending ? "Signing in..." : "Sign in"}
               </Button>
             </form>
@@ -56,7 +56,7 @@ function LoginForm() {
               </div>
               {mlState.error && <p className="text-sm text-destructive">{mlState.error}</p>}
               {mlState.message && <p className="text-sm text-success">{mlState.message}</p>}
-              <Button type="submit" className="w-full" disabled={mlPending}>
+              <Button type="submit" className="h-[42px] w-full" disabled={mlPending}>
                 {mlPending ? "Sending..." : "Email me a sign-in link"}
               </Button>
             </form>
@@ -78,11 +78,14 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-6 bg-muted/40 p-4">
-      <Logo />
+    <main className="flex min-h-screen flex-col items-center justify-center gap-7 bg-sidebar p-6">
+      <Logo className="text-[28px]" />
       <Suspense>
         <LoginForm />
       </Suspense>
+      <p className="font-mono text-[11.5px] text-muted-foreground">
+        Property tax appeals, built on the counties&apos; own data.
+      </p>
     </main>
   );
 }
