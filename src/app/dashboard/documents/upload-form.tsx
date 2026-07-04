@@ -15,8 +15,15 @@ import {
 } from "@/components/ui/select";
 
 type Property = { parid: string; address: string | null };
+type DocumentType = "rent_roll" | "t12" | "photo" | "other";
 
-export function UploadForm({ properties }: { properties: Property[] }) {
+export function UploadForm({
+  properties,
+  defaultType = "rent_roll",
+}: {
+  properties: Property[];
+  defaultType?: DocumentType;
+}) {
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
   const [state, setState] = useState<{ status: "idle" | "uploading"; error?: string }>(
@@ -47,7 +54,7 @@ export function UploadForm({ properties }: { properties: Property[] }) {
       <div className="grid gap-4 sm:grid-cols-3">
         <div className="space-y-1">
           <Label htmlFor="type">Document type</Label>
-          <Select name="type" defaultValue="rent_roll">
+          <Select name="type" defaultValue={defaultType}>
             <SelectTrigger id="type" className="w-full">
               <SelectValue />
             </SelectTrigger>

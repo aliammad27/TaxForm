@@ -237,7 +237,7 @@ export async function verifyLetter(
     ...score.comp_result.comps.map((c) => `comp:${c.address ?? c.parid}`)
   );
 
-  let issues = deterministicIssues;
+  const issues = deterministicIssues;
   const method: VerificationResult["method"] = "deterministic";
 
   return {

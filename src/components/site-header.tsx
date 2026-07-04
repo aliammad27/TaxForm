@@ -9,6 +9,18 @@ export function SiteHeader() {
         <Logo />
         <nav className="flex items-center gap-5">
           <Link
+            href="/residential"
+            className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+          >
+            For Homeowners
+          </Link>
+          <Link
+            href="/commercial"
+            className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+          >
+            For Property Owners
+          </Link>
+          <Link
             href="/counties"
             className="text-sm text-muted-foreground transition-colors hover:text-foreground"
           >

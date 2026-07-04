@@ -258,6 +258,27 @@ export default async function CountyLandingPage({
             </>
           )}
         </div>
+
+        <section className="mt-12 border-t pt-8">
+          <h2 className="font-serif text-2xl tracking-tight">
+            Choose the appeal path for your property
+          </h2>
+          <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
+            {county} County&apos;s CLR sets the county-level rule. Equarra tailors
+            the next step to how your property is used and what evidence supports
+            the valuation.
+          </p>
+          <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+            <Button render={<Link href="/residential" />}>
+              Check my home
+              <ArrowRight data-icon="inline-end" />
+            </Button>
+            <Button variant="outline" render={<Link href="/commercial" />}>
+              Check my property
+              <ArrowRight data-icon="inline-end" />
+            </Button>
+          </div>
+        </section>
       </main>
 
       <SiteFooter />
