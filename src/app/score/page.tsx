@@ -1,5 +1,11 @@
 import Link from "next/link";
 import { searchParcels } from "@/lib/parcels";
+import { isDatabaseReachable } from "@/lib/health";
+import {
+  classifySearchFailure,
+  searchErrorMessage,
+  type SearchFailureKind,
+} from "@/lib/search-errors";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { EmptyState } from "@/components/empty-state";
@@ -16,12 +22,14 @@ export default async function ScoreSearchPage({
   const { q } = await searchParams;
   let results: Awaited<ReturnType<typeof searchParcels>> = [];
   let error: string | null = null;
+  let errorKind: SearchFailureKind | null = null;
 
   if (q && q.trim().length >= 3) {
     try {
       results = await searchParcels(q, 15);
-    } catch {
-      error = "Search is temporarily unavailable.";
+    } catch (err) {
+      errorKind = await classifySearchFailure(err, isDatabaseReachable);
+      error = searchErrorMessage(errorKind);
     }
   }
 
@@ -53,9 +61,19 @@ export default async function ScoreSearchPage({
         </form>
 
         {error && (
-          <p className="mt-6 border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm text-destructive">
-            {error}
-          </p>
+          <div className="mt-6 border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+            <p>{error}</p>
+            {errorKind === "database" && (
+              <p className="mt-2 text-xs text-destructive/80">
+                Local dev? Run{" "}
+                <code className="font-mono">npm run setup</code> then check{" "}
+                <Link href="/api/health" className="underline underline-offset-2">
+                  /api/health
+                </Link>
+                .
+              </p>
+            )}
+          </div>
         )}
         {q && !error && results.length === 0 && (
           <EmptyState

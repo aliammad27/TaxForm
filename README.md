@@ -43,6 +43,23 @@ the falling Common Level Ratio (50.14% for tax year 2026).
 
 ```bash
 npm install
+npm run setup    # creates .env, starts DB, applies seed fixture (~440 parcels)
+npm run dev
+```
+
+Open [http://localhost:3000/score?q=719+mulkerrin](http://localhost:3000/score?q=719+mulkerrin) or try the golden addresses below. Check [http://localhost:3000/api/health](http://localhost:3000/api/health) if anything looks off.
+
+### Golden test addresses (always in the seed fixture)
+
+| Query | Notes |
+|-------|--------|
+| `719 mulkerrin` | Matches the screenshot address |
+| `3409 DENNY ST` | Used in production setup smoke tests |
+| `429 Forbes` | Downtown commercial parcel |
+
+Manual setup (if you prefer):
+
+```bash
 cp .env.example .env
 ```
 
@@ -68,8 +85,10 @@ npm run dev
 
 ### Load county data
 
+The seed fixture (~440 Allegheny parcels) is enough for search, scoring, and smoke tests. Load the full dataset when you need realistic scale:
+
 ```bash
-npm run ingest:clr                        # Common Level Ratio table
+npm run ingest:clr                        # Common Level Ratio table (also in seed)
 npm run ingest:parcels -- --limit 30000   # dev subset (drop --limit for all ~580k, ~415MB CSV)
 npm run ingest:appeals                    # BPAAR dispositions 2015-2026
 npx tsx scripts/ingest/letter-chunks.ts   # RAG store for letter generation
