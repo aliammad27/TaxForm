@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getPool } from "@/lib/db";
+import { getLiveCounties } from "@/lib/counties/data";
 import { STEB_2026, appealWedgePct, countySlug } from "@/lib/steb";
 import geo from "@/lib/pa-counties-geo.json";
 import { Badge } from "@/components/ui/badge";
@@ -15,7 +15,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-export const revalidate = 86400;
+// On-demand: avoid opening Postgres at build time (Vercel can't reach Supabase during SSG).
+export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "Pennsylvania property overassessment map",
@@ -34,13 +35,7 @@ function wedgeColor(wedge: number | null): string {
 }
 
 export default async function CountiesPage() {
-  const { rows: statusRows } = await getPool().query<{
-    county: string;
-    onboarded: boolean;
-  }>(
-    `select county, onboarded_at is not null as onboarded from county_data_status`
-  );
-  const live = new Set(statusRows.filter((r) => r.onboarded).map((r) => r.county));
+  const live = await getLiveCounties();
 
   const counties = Object.entries(STEB_2026)
     .map(([county, row]) => ({
