@@ -51,7 +51,7 @@ export async function searchParcels(
     `select ${SUMMARY_COLUMNS}
      from parcels
      where full_address ilike '%' || $1 || '%'
-     order by similarity(full_address, $1) desc
+     order by extensions.similarity(full_address, $1) desc
      limit $2`,
     [q, limit]
   );

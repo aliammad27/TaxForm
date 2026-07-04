@@ -18,8 +18,12 @@ export default async function ScoreSearchPage({
   if (q && q.trim().length >= 3) {
     try {
       results = await searchParcels(q, 15);
-    } catch {
-      error = "Search is temporarily unavailable.";
+    } catch (err) {
+      console.error("Parcel search failed:", err);
+      error =
+        err instanceof Error && err.message.includes("DATABASE_URL")
+          ? "Database is not configured. Set DATABASE_URL in .env and start Postgres."
+          : "Search is temporarily unavailable.";
     }
   }
 
