@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
 import { getPool } from "@/lib/db";
 import { STEB_2026, appealWedgePct, countySlug } from "@/lib/steb";
 import geo from "@/lib/pa-counties-geo.json";
@@ -58,22 +57,23 @@ export default async function CountiesPage() {
     <div className="flex min-h-screen flex-col">
       <SiteHeader />
 
-      <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-14">
+      <main className="mx-auto w-full max-w-6xl flex-1 px-8 py-16">
         <p className="font-mono text-xs tracking-widest text-muted-foreground uppercase">
           Statewide overassessment map
         </p>
-        <h1 className="mt-3 font-serif text-4xl tracking-tight">
-          Most Pennsylvania counties assess property far from market value
+        <h1 className="mt-4 max-w-3xl font-serif text-[46px] leading-[1.1] tracking-[-0.01em]">
+          Most Pennsylvania counties assess property{" "}
+          <em className="text-primary">far from</em> market value
         </h1>
-        <p className="mt-3 max-w-2xl text-muted-foreground">
+        <p className="mt-4 max-w-2xl text-[15.5px] leading-relaxed text-muted-foreground">
           Each county&apos;s Common Level Ratio (CLR) — published annually by the
           State Tax Equalization Board — measures how far assessments sit below
           current market value. The bigger the gap, the bigger the potential
-          reduction when a property is assessed above the ratio. TaxForm is live
+          reduction when a property is assessed above the ratio. Equarra is live
           in {live.size} of 67 counties.
         </p>
 
-        <div className="mt-10">
+        <div className="mt-12 rounded-lg border bg-card p-8">
           <svg
             viewBox={`0 0 ${geo.width} ${geo.height}`}
             role="img"
@@ -88,7 +88,7 @@ export default async function CountiesPage() {
                   (info.wedge != null
                     ? `, assessed ~${info.wedge.toFixed(0)}% below market`
                     : "") +
-                  (info.isLive ? " — live on TaxForm" : "")
+                  (info.isLive ? " — live on Equarra" : "")
                 : `${c.name} County`;
               return (
                 <Link key={c.name} href={`/counties/${slug}`}>
@@ -105,7 +105,7 @@ export default async function CountiesPage() {
               );
             })}
           </svg>
-          <div className="mt-3 flex flex-wrap items-center gap-x-6 gap-y-2 text-xs text-muted-foreground">
+          <div className="mt-5 flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-dashed pt-4 font-mono text-[11.5px] text-muted-foreground">
             <span className="flex items-center gap-2">
               <span className="inline-block h-3 w-10 rounded-sm bg-gradient-to-r from-[#feE6be] to-[#a52418]" />
               Assessment gap (small &rarr; large)
@@ -116,15 +116,15 @@ export default async function CountiesPage() {
             </span>
             <span className="flex items-center gap-2">
               <span className="inline-block h-3 w-3 rounded-sm border-2 border-[#1c1917] bg-white" />
-              Live on TaxForm
+              Live on Equarra
             </span>
           </div>
         </div>
 
-        <h2 className="mt-14 font-serif text-2xl tracking-tight">
+        <h2 className="mt-[72px] font-serif text-3xl tracking-[-0.01em]">
           All 67 counties, ranked by assessment gap
         </h2>
-        <div className="mt-4">
+        <div className="mt-5 overflow-hidden rounded-lg border bg-card">
           <Table>
             <TableHeader>
               <TableRow>
@@ -159,8 +159,7 @@ export default async function CountiesPage() {
                       href={`/counties/${countySlug(c.county)}`}
                       className="inline-flex items-center gap-1 text-sm font-medium underline-offset-2 hover:underline"
                     >
-                      Details
-                      <ArrowRight className="size-3.5" />
+                      Details →
                     </Link>
                   </TableCell>
                 </TableRow>
@@ -180,11 +179,11 @@ export default async function CountiesPage() {
           <div className="mt-5 flex flex-col gap-3 sm:flex-row">
             <Button render={<Link href="/residential" />}>
               Check my home
-              <ArrowRight data-icon="inline-end" />
+              <span className="font-mono">→</span>
             </Button>
             <Button variant="outline" render={<Link href="/commercial" />}>
               Check my property
-              <ArrowRight data-icon="inline-end" />
+              <span className="font-mono">→</span>
             </Button>
           </div>
         </section>

@@ -21,8 +21,8 @@ const instrumentSerif = Instrument_Serif({
 
 export const metadata: Metadata = {
   title: {
-    default: "TaxForm — Allegheny County Property Tax Appeals",
-    template: "%s | TaxForm",
+    default: "Equarra — Allegheny County Property Tax Appeals",
+    template: "%s | Equarra",
   },
   description:
     "See if your Allegheny County property is over-assessed in 60 seconds. AI-powered comps, appeal letters, and full-service filing.",

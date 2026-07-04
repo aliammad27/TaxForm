@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { CalendarClock } from "lucide-react";
 import { requireClient } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { STATUS_LABELS } from "@/lib/appeal-status";
@@ -69,7 +68,6 @@ export default async function AppealsPage() {
         description="Start and track assessment appeals for your properties."
       >
         <Badge variant={window.windowOpen ? "default" : "secondary"}>
-          <CalendarClock />
           Tax year {window.taxYear} filing deadline: {window.filingDeadline}
         </Badge>
       </PageHeader>

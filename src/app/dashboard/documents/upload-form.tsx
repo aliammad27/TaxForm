@@ -2,7 +2,6 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -51,9 +50,13 @@ export function UploadForm({
 
   return (
     <form ref={formRef} onSubmit={onSubmit} className="space-y-4">
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid max-w-3xl items-end gap-3 sm:grid-cols-[1.2fr_1fr_1fr_auto]">
         <div className="space-y-1">
-          <Label htmlFor="type">Document type</Label>
+          <Label htmlFor="file">File</Label>
+          <Input id="file" name="file" type="file" required accept=".pdf,.csv,.txt,image/*" />
+        </div>
+        <div className="space-y-1">
+          <Label htmlFor="type">Type</Label>
           <Select name="type" defaultValue={defaultType}>
             <SelectTrigger id="type" className="w-full">
               <SelectValue />
@@ -82,16 +85,11 @@ export function UploadForm({
             </SelectContent>
           </Select>
         </div>
-        <div className="space-y-1">
-          <Label htmlFor="file">File (PDF, CSV, or image)</Label>
-          <Input id="file" name="file" type="file" required accept=".pdf,.csv,.txt,image/*" />
-        </div>
+        <Button type="submit" disabled={state.status === "uploading"}>
+          {state.status === "uploading" ? "Uploading..." : "Upload"}
+        </Button>
       </div>
       {state.error && <p className="text-sm text-destructive">{state.error}</p>}
-      <Button type="submit" disabled={state.status === "uploading"}>
-        <Upload data-icon="inline-start" />
-        {state.status === "uploading" ? "Uploading..." : "Upload"}
-      </Button>
     </form>
   );
 }

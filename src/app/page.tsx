@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -47,7 +46,8 @@ export default async function LandingPage() {
                 Pennsylvania property tax appeals · Tax year {taxYear}
               </p>
               <h1 className="mt-5 font-serif text-5xl leading-[1.05] tracking-tight text-balance sm:text-6xl">
-                Your assessment is supposed to follow the county&apos;s own ratio.
+                Your assessment is supposed to follow the county&apos;s{" "}
+                <em className="text-primary">own ratio</em>.
               </h1>
               <p className="mt-6 max-w-md text-lg text-muted-foreground">
                 If your assessment is above {clrPct}% of market value, the
@@ -57,19 +57,22 @@ export default async function LandingPage() {
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                 <Button size="lg" render={<Link href="/residential" />}>
                   For Homeowners
-                  <ArrowRight data-icon="inline-end" />
+                  <span className="font-mono">→</span>
                 </Button>
                 <Button size="lg" variant="outline" render={<Link href="/commercial" />}>
                   For Property Owners
-                  <ArrowRight data-icon="inline-end" />
+                  <span className="font-mono">→</span>
                 </Button>
               </div>
             </div>
 
-            <div className="border bg-card">
-              <div className="border-b px-5 py-3">
+            <div className="overflow-hidden rounded-lg border bg-card shadow-[0_1px_2px_oklch(0.23_0.012_120_/_0.04),0_12px_32px_-16px_oklch(0.23_0.012_120_/_0.12)]">
+              <div className="flex items-baseline justify-between border-b px-[22px] py-3">
                 <p className="font-mono text-xs tracking-widest text-muted-foreground uppercase">
                   CLR wedge example
+                </p>
+                <p className="font-mono text-[11px] text-muted-foreground">
+                  No. 2026-01
                 </p>
               </div>
               <div className="space-y-0 px-5 py-4 text-sm">
@@ -115,7 +118,7 @@ export default async function LandingPage() {
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
               <p className="font-mono text-xs tracking-widest text-muted-foreground uppercase">
-                Choose your path
+                01 — Choose your path
               </p>
               <h2 className="mt-4 font-serif text-3xl tracking-tight sm:text-4xl">
                 Same CLR math. Different evidence.
@@ -144,7 +147,7 @@ export default async function LandingPage() {
                 </p>
                 <Button className="mt-5" render={<Link href="/residential" />}>
                   Check my home
-                  <ArrowRight data-icon="inline-end" />
+                  <span className="font-mono">→</span>
                 </Button>
               </CardContent>
             </Card>
@@ -167,7 +170,7 @@ export default async function LandingPage() {
                   render={<Link href="/commercial" />}
                 >
                   Check my property
-                  <ArrowRight data-icon="inline-end" />
+                  <span className="font-mono">→</span>
                 </Button>
               </CardContent>
             </Card>
@@ -177,7 +180,7 @@ export default async function LandingPage() {
         <section className="border-y bg-card">
           <div className="mx-auto w-full max-w-6xl px-6 py-16 sm:py-24">
             <p className="font-mono text-xs tracking-widest text-muted-foreground uppercase">
-              Why this works
+              02 — Why this works
             </p>
             <blockquote className="mt-6 max-w-3xl font-serif text-3xl leading-snug tracking-tight sm:text-4xl">
               An appeal doesn&apos;t argue your home is worthless. It asks the
@@ -197,6 +200,28 @@ export default async function LandingPage() {
                 evidence an appeal board expects to see.
               </p>
             </div>
+          </div>
+        </section>
+
+        <section className="bg-[oklch(0.27_0.042_155)] text-[oklch(0.955_0.008_95)]">
+          <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-8 px-8 py-[88px]">
+            <div>
+              <h2 className="font-serif text-[44px] leading-tight tracking-[-0.01em]">
+                Find the value the county is taxing <em>twice</em>.
+              </h2>
+              <p className="mt-3.5 font-mono text-[12.5px] tracking-[0.06em] text-[oklch(0.78_0.02_130)]">
+                Free score · No account · County data only
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              size="lg"
+              className="border-transparent bg-[oklch(0.975_0.005_95)] text-[oklch(0.27_0.042_155)] hover:bg-[oklch(0.93_0.01_95)]"
+              render={<Link href="/score" />}
+            >
+              Check my address
+              <span className="font-mono">→</span>
+            </Button>
           </div>
         </section>
       </main>

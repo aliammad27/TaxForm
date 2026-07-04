@@ -15,12 +15,12 @@ export function StatCard({
   return (
     <Card>
       <CardContent className="space-y-2">
-        <p className="font-mono text-xs tracking-wider text-muted-foreground uppercase">
+        <p className="font-mono text-[11px] tracking-[0.14em] text-muted-foreground uppercase">
           {label}
         </p>
         <p
           className={cn(
-            "truncate text-2xl font-semibold tracking-tight tabular-nums sm:text-3xl",
+            "truncate text-[30px] font-semibold tracking-[-0.02em] tabular-nums",
             valueClassName
           )}
         >

@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { LogOut, ShieldCheck } from "lucide-react";
 import { requireClient } from "@/lib/auth";
 import { signOut } from "@/app/(auth)/actions";
 import {
@@ -44,17 +43,16 @@ export default async function DashboardLayout({
   return (
     <div className="flex min-h-screen flex-col md:flex-row">
       {/* Desktop sidebar */}
-      <aside className="sticky top-0 hidden h-screen w-64 flex-col border-r bg-sidebar p-4 text-sidebar-foreground md:flex">
-        <Logo className="mb-8 px-3" />
+      <aside className="sticky top-0 hidden h-screen w-64 flex-col border-r bg-sidebar px-4 py-6 text-sidebar-foreground md:flex">
+        <Logo className="mb-9 px-3 text-[24px]" />
         <DashboardNav items={items} />
         <div className="mt-auto space-y-3 border-t px-3 pt-4">
           {profile.role === "admin" && (
             <Link
               href="/admin"
-              className="flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+              className="text-[13.5px] font-medium text-muted-foreground transition-colors hover:text-foreground"
             >
-              <ShieldCheck className="size-4" />
-              Admin console
+              Admin console →
             </Link>
           )}
           <div className="text-sm">
@@ -67,7 +65,6 @@ export default async function DashboardLayout({
           </div>
           <form action={signOut}>
             <Button variant="outline" size="sm" className="w-full">
-              <LogOut data-icon="inline-start" />
               Sign out
             </Button>
           </form>
@@ -80,7 +77,6 @@ export default async function DashboardLayout({
           <Logo />
           <form action={signOut}>
             <Button variant="ghost" size="sm">
-              <LogOut data-icon="inline-start" />
               Sign out
             </Button>
           </form>
@@ -88,8 +84,8 @@ export default async function DashboardLayout({
         <DashboardMobileNav items={items} />
       </div>
 
-      <main className="min-w-0 flex-1 bg-background p-4 sm:p-8">
-        <div className="mx-auto w-full max-w-5xl">{children}</div>
+      <main className="min-w-0 flex-1 bg-background px-6 py-10 sm:px-12">
+        <div className="mx-auto w-full max-w-[960px]">{children}</div>
       </main>
     </div>
   );
