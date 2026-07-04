@@ -1,6 +1,22 @@
 import { getPool } from "../db";
 import type { AppealWindow, MillageLookup } from "./types";
 
+/** Counties with onboarded parcel data in county_data_status. */
+export async function getLiveCounties(): Promise<Set<string>> {
+  try {
+    const { rows } = await getPool().query<{
+      county: string;
+      onboarded: boolean;
+    }>(
+      `select county, onboarded_at is not null as onboarded from county_data_status`
+    );
+    return new Set(rows.filter((r) => r.onboarded).map((r) => r.county));
+  } catch {
+    // DB may be unreachable during static generation or local setup.
+    return new Set();
+  }
+}
+
 /**
  * Next appeal window for a county from the appeal_windows table: the row
  * whose close date is soonest but not yet past. Returns null when the table
