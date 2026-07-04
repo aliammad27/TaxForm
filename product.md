@@ -694,11 +694,14 @@ These features are implemented and functional when the stack is properly configu
 
 ```bash
 npm install
-cp .env.example .env
-# Start Postgres with migrations + CLR seed
-npx supabase start   # or ./scripts/dev/local-db.sh
-npm run ingest:parcels -- --limit 30000   # Allegheny dev subset
+npm run setup    # .env + DB + seed fixture — search works immediately
 npm run dev
+```
+
+Optional full Allegheny dataset:
+
+```bash
+npm run ingest:parcels -- --limit 30000   # or drop --limit for ~580k
 ```
 
 ### Full intelligence stack
@@ -717,7 +720,7 @@ npm run train:adjudication                  # Allegheny model (--county <name> o
 
 | Variable | Required for |
 |----------|--------------|
-| `DATABASE_URL` | Everything (use the Supabase **session pooler** URL on IPv4-only networks) |
+| `DATABASE_URL` | Everything (use the Supabase **session pooler** URL on IPv4-only networks). Health: `GET /api/health` |
 | `NEXT_PUBLIC_SUPABASE_URL` / anon key | Auth, client dashboard |
 | `SUPABASE_SERVICE_ROLE_KEY` | Storage uploads, document persistence |
 | `ANTHROPIC_API_KEY` | Claude comps/letters, extraction, vision |

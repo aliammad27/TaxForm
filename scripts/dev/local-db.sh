@@ -10,6 +10,7 @@
 # schemas so the migrations apply unmodified, then runs migrations + seed.
 # Auth/Storage API features require the real Supabase stack.
 set -euo pipefail
+cd "$(dirname "$0")/../.."
 
 PG=/opt/homebrew/opt/postgresql@17/bin
 DATA_DIR=/opt/homebrew/var/postgresql@17
@@ -72,4 +73,5 @@ done
 echo "applying supabase/seed.sql"
 "$PG/psql" -h 127.0.0.1 -p "$PORT" -U "$USER" -d postgres -v ON_ERROR_STOP=1 -f supabase/seed.sql
 
-echo "Local database ready on port $PORT"
+PARCEL_COUNT=$("$PG/psql" -h 127.0.0.1 -p "$PORT" -U "$USER" -d postgres -tAc "select count(*) from parcels" | tr -d '[:space:]')
+echo "Local database ready on port $PORT (${PARCEL_COUNT} seed parcels)"

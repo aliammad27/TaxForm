@@ -4,25 +4,16 @@ try {
 } catch {}
 
 import { writeFileSync } from "node:fs";
+import { GOLDEN_RESIDENTIAL_PARID } from "../../src/lib/golden-parcels";
 import { computeSavingsScore } from "../../src/lib/savings";
 import { generateLetterText, renderLetterPdf } from "../../src/lib/letters";
 import { getPool } from "../../src/lib/db";
 
 async function main() {
-  const parid =
-    process.argv[2] ??
-    (
-      await getPool().query(
-        `select p.parid from parcels p
-         join sales s on s.parid = p.parid
-         where p.class = 'R' and p.finished_living_area between 1200 and 2000
-           and s.is_valid_sale
-         limit 1`
-      )
-    ).rows[0]?.parid;
+  const parid = process.argv[2] ?? GOLDEN_RESIDENTIAL_PARID;
 
   const score = await computeSavingsScore(parid);
-  if (!score) throw new Error("no score");
+  if (!score) throw new Error(`no score for ${parid} — is the seed fixture loaded?`);
 
   const { text, method } = await generateLetterText({
     score,
@@ -34,6 +25,7 @@ async function main() {
   const pdf = await renderLetterPdf(text);
   writeFileSync("/tmp/appeal-letter-test.pdf", pdf);
   console.log(`\nPDF written to /tmp/appeal-letter-test.pdf (${pdf.length} bytes)`);
+  await getPool().end();
   process.exit(0);
 }
 

@@ -15,14 +15,19 @@ if [[ -z "${DATABASE_URL:-}" ]]; then
   exit 1
 fi
 
-echo "==> Pushing migrations to Supabase..."
+echo "==> Pushing migrations + seed (includes ~440 parcel fixture) to Supabase..."
 npx supabase db push --db-url "$DATABASE_URL" --include-seed --yes
 
 echo "==> Loading Common Level Ratio..."
 npm run ingest:clr
 
-echo "==> Loading parcel subset (30k records)..."
-npm run ingest:parcels -- --limit 30000
+PARCEL_COUNT=$(psql "$DATABASE_URL" -tAc "select count(*) from parcels" 2>/dev/null | tr -d '[:space:]' || echo 0)
+if [[ "${PARCEL_COUNT:-0}" -lt 300 ]]; then
+  echo "==> Parcel count below 300; loading Allegheny subset (30k records)..."
+  npm run ingest:parcels -- --limit 30000
+else
+  echo "==> Seed fixture loaded (${PARCEL_COUNT} parcels); skipping bulk ingestion."
+fi
 
 echo "==> Loading BPAAR appeal outcomes..."
 npm run ingest:appeals

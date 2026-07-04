@@ -9,6 +9,8 @@
     "lint": "eslint",
     "db:start": "supabase start",
     "db:reset": "supabase db reset",
+    "setup": "bash scripts/dev/setup.sh",
+    "export:fixture": "tsx scripts/dev/export-parcel-fixture.ts",
     "ingest:clr": "tsx scripts/ingest/clr.ts",
     "ingest:parcels": "tsx scripts/ingest/parcels.ts",
     "ingest:york": "tsx scripts/ingest/york.ts",

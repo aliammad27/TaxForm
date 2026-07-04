@@ -2,7 +2,12 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { isDatabaseReachable } from "@/lib/health";
 import { searchParcels, type ParcelSummary } from "@/lib/parcels";
+import {
+  classifySearchFailure,
+  searchErrorMessage,
+} from "@/lib/search-errors";
 
 export type SearchState = { results: ParcelSummary[]; error?: string };
 
@@ -12,7 +17,7 @@ export async function searchAction(
 ): Promise<SearchState> {
   const query = String(formData.get("query") ?? "");
   if (query.trim().length < 3) {
-    return { results: [], error: "Enter at least 3 characters." };
+    return { results: [], error: searchErrorMessage("validation") };
   }
   try {
     const results = await searchParcels(query, 10);
@@ -20,8 +25,9 @@ export async function searchAction(
       results,
       error: results.length ? undefined : "No parcels matched that search.",
     };
-  } catch {
-    return { results: [], error: "Search failed. Is the parcel data loaded?" };
+  } catch (err) {
+    const kind = await classifySearchFailure(err, isDatabaseReachable);
+    return { results: [], error: searchErrorMessage(kind) };
   }
 }
 

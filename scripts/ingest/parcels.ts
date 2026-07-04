@@ -14,111 +14,26 @@ import {
   datastorePages,
   download,
   getPool,
-  int,
-  num,
-  parseDate,
-  str,
 } from "./lib";
-import { parcelVector, toVectorLiteral } from "../../src/lib/embeddings";
+import {
+  DATASTORE_RESOURCE_ID,
+  PARCEL_COLUMNS,
+  parcelRow,
+  saleRows,
+  type ParcelRecord,
+} from "./parcel-mapper";
 
 const BULK_CSV_URL =
   "https://data.wprdc.org/dataset/2b3df818-601e-4f06-b150-643557229491/resource/9a1c60bd-f9f7-4aba-aeb7-af8c3aaa44e5/download/assessments.csv";
-const DATASTORE_RESOURCE_ID = "65855e14-549e-4992-b5be-d629afc676fa";
 const BATCH_SIZE = 1000;
 
-const PARCEL_COLUMNS = [
-  "parid", "house_num", "fraction", "address", "unit", "city", "state", "zip",
-  "muni_code", "muni_desc", "school_code", "school_desc", "neigh_code",
-  "neigh_desc", "tax_code", "class", "class_desc", "use_code", "use_desc",
-  "lot_area", "homestead", "county_building", "county_land", "county_total",
-  "local_total", "fair_market_building", "fair_market_land",
-  "fair_market_total", "style_desc", "stories", "year_built", "exterior_desc",
-  "roof_desc", "basement_desc", "grade", "grade_desc", "condition",
-  "condition_desc", "total_rooms", "bedrooms", "full_baths", "half_baths",
-  "heating_cooling_desc", "fireplaces", "basement_garage",
-  "finished_living_area", "tax_year", "as_of_date", "embedding",
-];
+export { DATASTORE_RESOURCE_ID, PARCEL_COLUMNS, parcelRow, saleRows } from "./parcel-mapper";
 
 const PARCEL_CONFLICT = `on conflict (parid) do update set ${PARCEL_COLUMNS.filter(
   (c) => c !== "parid"
 )
   .map((c) => `${c} = excluded.${c}`)
   .join(", ")}, updated_at = now()`;
-
-type Row = Record<string, unknown>;
-
-function parcelRow(r: Row): unknown[] | null {
-  const parid = str(r.PARID);
-  if (!parid) return null;
-  // Multi-card parcels repeat PARID per building card; keep card 1 only.
-  const card = int(r.CARDNUMBER);
-  if (card != null && card > 1) return null;
-
-  const characteristics = {
-    finished_living_area: num(r.FINISHEDLIVINGAREA),
-    lot_area: num(r.LOTAREA),
-    bedrooms: int(r.BEDROOMS),
-    full_baths: int(r.FULLBATHS),
-    half_baths: int(r.HALFBATHS),
-    total_rooms: int(r.TOTALROOMS),
-    year_built: int(r.YEARBLT),
-    stories: num(r.STORIES),
-    fireplaces: int(r.FIREPLACES),
-    basement_garage: int(r.BSMTGARAGE),
-    condition: str(r.CONDITION),
-    grade: str(r.GRADE),
-    county_total: num(r.COUNTYTOTAL),
-  };
-
-  return [
-    parid,
-    str(r.PROPERTYHOUSENUM), str(r.PROPERTYFRACTION), str(r.PROPERTYADDRESS),
-    str(r.PROPERTYUNIT), str(r.PROPERTYCITY), str(r.PROPERTYSTATE),
-    str(r.PROPERTYZIP),
-    str(r.MUNICODE), str(r.MUNIDESC), str(r.SCHOOLCODE), str(r.SCHOOLDESC),
-    str(r.NEIGHCODE), str(r.NEIGHDESC), str(r.TAXCODE),
-    str(r.CLASS), str(r.CLASSDESC), str(r.USECODE), str(r.USEDESC),
-    num(r.LOTAREA),
-    str(r.HOMESTEADFLAG) === "HOM",
-    num(r.COUNTYBUILDING), num(r.COUNTYLAND), num(r.COUNTYTOTAL),
-    num(r.LOCALTOTAL),
-    num(r.FAIRMARKETBUILDING), num(r.FAIRMARKETLAND), num(r.FAIRMARKETTOTAL),
-    str(r.STYLEDESC), num(r.STORIES), int(r.YEARBLT), str(r.EXTFINISH_DESC),
-    str(r.ROOFDESC), str(r.BASEMENTDESC), str(r.GRADE), str(r.GRADEDESC),
-    str(r.CONDITION), str(r.CONDITIONDESC), int(r.TOTALROOMS),
-    int(r.BEDROOMS), int(r.FULLBATHS), int(r.HALFBATHS),
-    str(r.HEATINGCOOLINGDESC), int(r.FIREPLACES), int(r.BSMTGARAGE),
-    num(r.FINISHEDLIVINGAREA), int(r.TAXYEAR), parseDate(r.ASOFDATE),
-    toVectorLiteral(parcelVector(characteristics)),
-  ];
-}
-
-function saleRows(r: Row): unknown[][] {
-  const parid = str(r.PARID);
-  if (!parid) return [];
-  const rows: unknown[][] = [];
-
-  const saleDate = parseDate(r.SALEDATE);
-  const salePrice = num(r.SALEPRICE);
-  if (saleDate && salePrice != null) {
-    const desc = (str(r.SALEDESC) ?? "").toUpperCase();
-    rows.push([parid, saleDate, salePrice, str(r.SALECODE), str(r.SALEDESC),
-      desc.includes("VALID")]);
-  }
-  // Prior sales carry no validity code; use a price floor heuristic to skip
-  // $1 deed transfers and the like.
-  for (const [d, p] of [
-    [r.PREVSALEDATE, r.PREVSALEPRICE],
-    [r.PREVSALEDATE2, r.PREVSALEPRICE2],
-  ]) {
-    const date = parseDate(d);
-    const price = num(p);
-    if (date && price != null) {
-      rows.push([parid, date, price, null, "PRIOR SALE", price >= 10000]);
-    }
-  }
-  return rows;
-}
 
 async function main() {
   const limitArg = process.argv.indexOf("--limit");
@@ -157,7 +72,7 @@ async function main() {
     }
   }
 
-  async function handle(record: Row) {
+  async function handle(record: ParcelRecord) {
     const p = parcelRow(record);
     if (p) {
       parcelBatch.set(String(p[0]), p);
@@ -178,7 +93,7 @@ async function main() {
     const parser = createReadStream(file).pipe(
       parse({ columns: true, relax_column_count: true, bom: true, trim: true })
     );
-    for await (const record of parser) await handle(record as Row);
+    for await (const record of parser) await handle(record as ParcelRecord);
   }
 
   await flush();
@@ -186,7 +101,13 @@ async function main() {
   await pool.end();
 }
 
-main().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+const isDirectRun =
+  process.argv[1]?.includes("parcels.ts") ||
+  process.argv[1]?.includes("parcels");
+
+if (isDirectRun) {
+  main().catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
+}

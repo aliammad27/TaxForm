@@ -1,32 +1,22 @@
-/** Dev smoke test: runs the Comp Engine against a sample residential parcel. */
+/** Dev smoke test: runs the Comp Engine against the seed fixture parcel. */
 try {
   process.loadEnvFile();
 } catch {}
 
 import { estimateFmv } from "../../src/lib/comp-engine";
+import { GOLDEN_RESIDENTIAL_PARID } from "../../src/lib/golden-parcels";
 import { getPool } from "../../src/lib/db";
 
 async function main() {
-  const parid =
-    process.argv[2] ??
-    (
-      await getPool().query(
-        `select p.parid from parcels p
-         join sales s on s.parid = p.parid
-         where p.class = 'R'
-           and p.finished_living_area between 1200 and 2000
-           and s.is_valid_sale
-         limit 1`
-      )
-    ).rows[0]?.parid;
-
-  if (!parid) throw new Error("no sample parcel found - run ingestion first");
+  const parid = process.argv[2] ?? GOLDEN_RESIDENTIAL_PARID;
 
   const result = await estimateFmv(parid);
-  if (!result) throw new Error("no result");
+  if (!result) throw new Error(`no comp result for ${parid} — is the seed fixture loaded?`);
+
   console.log(
     JSON.stringify(
       {
+        parid,
         subject: result.subject.full_address,
         current_assessed: result.subject.county_total,
         method: result.method,
@@ -43,6 +33,7 @@ async function main() {
       2
     )
   );
+  await getPool().end();
   process.exit(0);
 }
 
