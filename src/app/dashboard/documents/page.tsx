@@ -1,7 +1,16 @@
+import { FileText } from "lucide-react";
 import { requireClient } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { EmptyState } from "@/components/empty-state";
+import { PageHeader } from "@/components/page-header";
 import { UploadForm } from "./upload-form";
 import { ProcessButton } from "./process-button";
 import { rentRollSchema, t12Schema } from "@/lib/extraction";
@@ -77,19 +86,22 @@ export default async function DocumentsPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Documents</h1>
+      <PageHeader
+        title="Documents"
+        description="Upload evidence — rent rolls, operating statements, and condition photos."
+      />
 
       <Card>
         <CardHeader>
           <CardTitle>Upload</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <UploadForm properties={properties} />
-          <p className="mt-3 text-xs text-muted-foreground">
+          <CardDescription>
             Rent rolls and T-12s are parsed into structured data for the income
             approach. Photos are analyzed for condition evidence that feeds
             your comps and appeal letter.
-          </p>
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <UploadForm properties={properties} />
         </CardContent>
       </Card>
 
@@ -99,21 +111,30 @@ export default async function DocumentsPage() {
         </CardHeader>
         <CardContent>
           {docs.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No documents uploaded yet.</p>
+            <EmptyState
+              icon={FileText}
+              title="No documents uploaded yet"
+              description="Uploaded documents and their extracted data will appear here."
+            />
           ) : (
             <ul className="divide-y">
               {docs.map((d) => {
                 const summary = extractedSummary(d.type, d.extracted_json);
                 return (
                   <li key={d.id} className="flex items-center justify-between gap-4 py-3">
-                    <div className="min-w-0">
-                      <p className="truncate font-medium">
-                        {d.original_name ?? TYPE_LABELS[d.type]}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        {TYPE_LABELS[d.type]}
-                        {summary && <> · {summary}</>}
-                      </p>
+                    <div className="flex min-w-0 items-center gap-3">
+                      <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-foreground">
+                        <FileText className="size-4" />
+                      </span>
+                      <div className="min-w-0">
+                        <p className="truncate font-medium">
+                          {d.original_name ?? TYPE_LABELS[d.type]}
+                        </p>
+                        <p className="truncate text-sm text-muted-foreground">
+                          {TYPE_LABELS[d.type]}
+                          {summary && <> · {summary}</>}
+                        </p>
+                      </div>
                     </div>
                     <div className="flex shrink-0 items-center gap-3">
                       <Badge

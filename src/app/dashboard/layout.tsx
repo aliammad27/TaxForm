@@ -1,7 +1,13 @@
 import Link from "next/link";
+import { LogOut, ShieldCheck } from "lucide-react";
 import { requireClient } from "@/lib/auth";
 import { signOut } from "@/app/(auth)/actions";
-import { DashboardNav, type NavItem } from "@/components/dashboard-nav";
+import {
+  DashboardNav,
+  DashboardMobileNav,
+  type NavItem,
+} from "@/components/dashboard-nav";
+import { Logo } from "@/components/logo";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
@@ -20,42 +26,71 @@ export default async function DashboardLayout({
   const isCommercial = profile.tier !== "residential_diy";
 
   const items: NavItem[] = [
-    { href: "/dashboard", label: "Overview" },
-    { href: "/dashboard/properties", label: "Properties" },
-    { href: "/dashboard/appeals", label: "Appeals" },
-    { href: "/dashboard/documents", label: "Documents" },
+    { href: "/dashboard", label: "Overview", icon: "overview" },
+    { href: "/dashboard/properties", label: "Properties", icon: "properties" },
+    { href: "/dashboard/appeals", label: "Appeals", icon: "appeals" },
+    { href: "/dashboard/documents", label: "Documents", icon: "documents" },
     ...(isCommercial
-      ? [{ href: "/dashboard/portfolio", label: "Portfolio Analytics" }]
+      ? [
+          {
+            href: "/dashboard/portfolio",
+            label: "Portfolio Analytics",
+            icon: "portfolio",
+          },
+        ]
       : []),
   ];
 
   return (
-    <div className="flex min-h-screen">
-      <aside className="flex w-60 flex-col border-r bg-muted/30 p-4">
-        <Link href="/" className="mb-6 px-3 text-lg font-bold tracking-tight">
-          TaxForm
-        </Link>
+    <div className="flex min-h-screen flex-col md:flex-row">
+      {/* Desktop sidebar */}
+      <aside className="sticky top-0 hidden h-screen w-64 flex-col border-r bg-sidebar p-4 text-sidebar-foreground md:flex">
+        <Logo className="mb-8 px-3" />
         <DashboardNav items={items} />
-        <div className="mt-auto space-y-3 px-3 pt-6">
+        <div className="mt-auto space-y-3 border-t px-3 pt-4">
           {profile.role === "admin" && (
-            <Link href="/admin" className="block text-sm underline">
+            <Link
+              href="/admin"
+              className="flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+            >
+              <ShieldCheck className="size-4" />
               Admin console
             </Link>
           )}
           <div className="text-sm">
-            <p className="truncate font-medium">{profile.full_name || profile.email}</p>
+            <p className="truncate font-medium">
+              {profile.full_name || profile.email}
+            </p>
             <Badge variant="secondary" className="mt-1">
               {TIER_LABELS[profile.tier]}
             </Badge>
           </div>
           <form action={signOut}>
             <Button variant="outline" size="sm" className="w-full">
+              <LogOut data-icon="inline-start" />
               Sign out
             </Button>
           </form>
         </div>
       </aside>
-      <main className="flex-1 p-8">{children}</main>
+
+      {/* Mobile header */}
+      <div className="sticky top-0 z-40 border-b bg-sidebar md:hidden">
+        <div className="flex items-center justify-between px-4 py-3">
+          <Logo />
+          <form action={signOut}>
+            <Button variant="ghost" size="sm">
+              <LogOut data-icon="inline-start" />
+              Sign out
+            </Button>
+          </form>
+        </div>
+        <DashboardMobileNav items={items} />
+      </div>
+
+      <main className="min-w-0 flex-1 bg-background p-4 sm:p-8">
+        <div className="mx-auto w-full max-w-5xl">{children}</div>
+      </main>
     </div>
   );
 }

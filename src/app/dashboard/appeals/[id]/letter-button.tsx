@@ -32,7 +32,7 @@ export function LetterButton({ appealId }: { appealId: string }) {
         {state === "working" ? "Generating letter..." : "Generate appeal letter (PDF)"}
       </Button>
       {state === "error" && (
-        <p className="text-sm text-red-600">
+        <p className="text-sm text-destructive">
           Letter generation failed. Make sure the parcel has comparable sales data.
         </p>
       )}

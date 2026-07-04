@@ -2,9 +2,17 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type Property = { parid: string; address: string | null };
 
@@ -39,41 +47,42 @@ export function UploadForm({ properties }: { properties: Property[] }) {
       <div className="grid gap-4 sm:grid-cols-3">
         <div className="space-y-1">
           <Label htmlFor="type">Document type</Label>
-          <select
-            id="type"
-            name="type"
-            className="w-full rounded-md border bg-transparent px-3 py-2 text-sm"
-            defaultValue="rent_roll"
-          >
-            <option value="rent_roll">Rent roll</option>
-            <option value="t12">T-12 operating statement</option>
-            <option value="photo">Property photo</option>
-            <option value="other">Other</option>
-          </select>
+          <Select name="type" defaultValue="rent_roll">
+            <SelectTrigger id="type" className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="rent_roll">Rent roll</SelectItem>
+              <SelectItem value="t12">T-12 operating statement</SelectItem>
+              <SelectItem value="photo">Property photo</SelectItem>
+              <SelectItem value="other">Other</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
         <div className="space-y-1">
           <Label htmlFor="parid">Property</Label>
-          <select
-            id="parid"
-            name="parid"
-            className="w-full rounded-md border bg-transparent px-3 py-2 text-sm"
-            defaultValue=""
-          >
-            <option value="">Not linked</option>
-            {properties.map((p) => (
-              <option key={p.parid} value={p.parid}>
-                {p.address ?? p.parid}
-              </option>
-            ))}
-          </select>
+          <Select name="parid" defaultValue="">
+            <SelectTrigger id="parid" className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">Not linked</SelectItem>
+              {properties.map((p) => (
+                <SelectItem key={p.parid} value={p.parid}>
+                  {p.address ?? p.parid}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
         <div className="space-y-1">
           <Label htmlFor="file">File (PDF, CSV, or image)</Label>
           <Input id="file" name="file" type="file" required accept=".pdf,.csv,.txt,image/*" />
         </div>
       </div>
-      {state.error && <p className="text-sm text-red-600">{state.error}</p>}
+      {state.error && <p className="text-sm text-destructive">{state.error}</p>}
       <Button type="submit" disabled={state.status === "uploading"}>
+        <Upload data-icon="inline-start" />
         {state.status === "uploading" ? "Uploading..." : "Upload"}
       </Button>
     </form>

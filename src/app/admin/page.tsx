@@ -1,9 +1,18 @@
 import Link from "next/link";
+import { CalendarClock, Check, Gavel, Inbox } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { STATUS_LABELS, STATUS_ORDER } from "@/lib/appeal-status";
 import { nextAppealWindow } from "@/lib/appeal-window";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { EmptyState } from "@/components/empty-state";
+import { PageHeader } from "@/components/page-header";
 import {
   Table,
   TableBody,
@@ -83,24 +92,27 @@ export default async function AdminDashboardPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Filing dashboard</h1>
+      <PageHeader
+        title="Filing dashboard"
+        description="Pipeline, deadlines, and evidence checklists across all client appeals."
+      >
         <Badge variant={window.windowOpen ? "default" : "secondary"}>
+          <CalendarClock />
           {window.windowOpen ? "Filing window OPEN" : "Filing window closed"} — tax
           year {window.taxYear} deadline {window.filingDeadline}
         </Badge>
-      </div>
+      </PageHeader>
 
       <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-6">
         {STATUS_ORDER.map((s) => (
-          <Card key={s}>
-            <CardHeader className="pb-1">
-              <CardTitle className="text-xs font-medium text-muted-foreground">
+          <Card key={s} size="sm">
+            <CardContent className="space-y-1">
+              <p className="text-xs font-medium text-muted-foreground">
                 {STATUS_LABELS[s]}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="text-2xl font-bold">
-              {byStatus.get(s) ?? 0}
+              </p>
+              <p className="font-heading text-2xl font-bold">
+                {byStatus.get(s) ?? 0}
+              </p>
             </CardContent>
           </Card>
         ))}
@@ -110,12 +122,17 @@ export default async function AdminDashboardPage() {
         <Card>
           <CardHeader>
             <CardTitle>Filing deadlines</CardTitle>
+            <CardDescription>
+              Draft and ready-to-file appeals, most urgent first.
+            </CardDescription>
           </CardHeader>
           <CardContent>
             {needsFiling.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                Nothing waiting to be filed.
-              </p>
+              <EmptyState
+                icon={Inbox}
+                title="Nothing waiting to be filed"
+                className="py-6"
+              />
             ) : (
               <ul className="space-y-2">
                 {needsFiling.map((a) => {
@@ -130,7 +147,9 @@ export default async function AdminDashboardPage() {
                       </Link>
                       <span
                         className={
-                          days <= 14 ? "font-semibold text-red-600" : "text-muted-foreground"
+                          days <= 14
+                            ? "font-semibold text-destructive"
+                            : "text-muted-foreground"
                         }
                       >
                         {days < 0 ? "past due" : `${days} days left`}
@@ -146,10 +165,15 @@ export default async function AdminDashboardPage() {
         <Card>
           <CardHeader>
             <CardTitle>Hearing calendar</CardTitle>
+            <CardDescription>Upcoming BPAAR hearings.</CardDescription>
           </CardHeader>
           <CardContent>
             {upcomingHearings.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No hearings scheduled.</p>
+              <EmptyState
+                icon={CalendarClock}
+                title="No hearings scheduled"
+                className="py-6"
+              />
             ) : (
               <ul className="space-y-2">
                 {upcomingHearings.map((a) => (
@@ -175,7 +199,7 @@ export default async function AdminDashboardPage() {
         </CardHeader>
         <CardContent>
           {appeals.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No appeals yet.</p>
+            <EmptyState icon={Gavel} title="No appeals yet" className="py-6" />
           ) : (
             <Table>
               <TableHeader>
@@ -218,7 +242,7 @@ export default async function AdminDashboardPage() {
                             variant={c.done ? "default" : "outline"}
                             className="text-xs"
                           >
-                            {c.done ? "✓ " : ""}
+                            {c.done && <Check />}
                             {c.label}
                           </Badge>
                         ))}

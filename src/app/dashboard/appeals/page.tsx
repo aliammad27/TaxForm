@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { CalendarClock, Gavel } from "lucide-react";
 import { requireClient } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { STATUS_LABELS } from "@/lib/appeal-status";
@@ -6,7 +7,15 @@ import { nextAppealWindow } from "@/lib/appeal-window";
 import { createAppeal } from "./actions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { EmptyState } from "@/components/empty-state";
+import { PageHeader } from "@/components/page-header";
 import {
   Table,
   TableBody,
@@ -55,30 +64,36 @@ export default async function AppealsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Appeals</h1>
+      <PageHeader
+        title="Appeals"
+        description="Start and track assessment appeals for your properties."
+      >
         <Badge variant={window.windowOpen ? "default" : "secondary"}>
+          <CalendarClock />
           Tax year {window.taxYear} filing deadline: {window.filingDeadline}
         </Badge>
-      </div>
+      </PageHeader>
 
       {eligible.length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle>Start an appeal</CardTitle>
+            <CardDescription>
+              These properties don&apos;t have a {window.taxYear} appeal yet.
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-2">
             {eligible.map((p) => (
               <form
                 key={p.parid}
                 action={createAppeal}
-                className="flex items-center justify-between rounded-md border p-3"
+                className="flex items-center justify-between gap-3 rounded-lg border bg-muted/30 p-3"
               >
-                <span className="text-sm font-medium">
+                <span className="min-w-0 truncate text-sm font-medium">
                   {p.parcels?.full_address ?? p.parid}
                 </span>
                 <input type="hidden" name="parid" value={p.parid} />
-                <Button type="submit" size="sm">
+                <Button type="submit" size="sm" className="shrink-0">
                   Start {window.taxYear} appeal
                 </Button>
               </form>
@@ -93,18 +108,25 @@ export default async function AppealsPage() {
         </CardHeader>
         <CardContent>
           {appeals.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              No appeals yet.{" "}
+            <EmptyState
+              icon={Gavel}
+              title="No appeals yet"
+              description={
+                properties.length === 0
+                  ? "First add a property, then start an appeal from here."
+                  : "Start an appeal for one of your properties above."
+              }
+            >
               {properties.length === 0 && (
-                <>
-                  First{" "}
-                  <Link href="/dashboard/properties" className="underline">
-                    add a property
-                  </Link>
-                  .
-                </>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  render={<Link href="/dashboard/properties" />}
+                >
+                  Add a property
+                </Button>
               )}
-            </p>
+            </EmptyState>
           ) : (
             <Table>
               <TableHeader>

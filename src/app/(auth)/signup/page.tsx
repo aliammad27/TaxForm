@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import Link from "next/link";
 import { signUp, type AuthState } from "../actions";
+import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -21,10 +22,15 @@ export default function SignupPage() {
   const [state, action, pending] = useActionState(signUp, initialState);
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-muted/40 p-4">
-      <Card className="w-full max-w-md">
+    <main className="relative flex min-h-screen flex-col items-center justify-center gap-6 bg-muted/40 p-4">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(50rem_25rem_at_50%_-10%,--alpha(var(--color-primary)/8%),transparent)]"
+      />
+      <Logo className="relative" />
+      <Card className="w-full max-w-md shadow-lg">
         <CardHeader>
-          <CardTitle>Create an account</CardTitle>
+          <CardTitle className="text-lg">Create an account</CardTitle>
           <CardDescription>
             Start appealing your Allegheny County property assessment
           </CardDescription>
@@ -58,14 +64,17 @@ export default function SignupPage() {
                 </SelectContent>
               </Select>
             </div>
-            {state.error && <p className="text-sm text-red-600">{state.error}</p>}
+            {state.error && <p className="text-sm text-destructive">{state.error}</p>}
             <Button type="submit" className="w-full" disabled={pending}>
               {pending ? "Creating account..." : "Create account"}
             </Button>
           </form>
           <p className="mt-4 text-center text-sm text-muted-foreground">
             Already have an account?{" "}
-            <Link href="/login" className="underline">
+            <Link
+              href="/login"
+              className="font-medium text-primary underline underline-offset-2"
+            >
               Sign in
             </Link>
           </p>
