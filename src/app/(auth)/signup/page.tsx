@@ -18,12 +18,27 @@ import {
 
 const initialState: AuthState = {};
 
+type SignupTier = "residential_diy" | "commercial_contingency" | "full_service";
+
+function defaultTierFromParams(params: {
+  path?: string;
+  tier?: string;
+}): SignupTier {
+  if (params.tier === "full_service") return "full_service";
+  if (params.tier === "commercial_contingency") return "commercial_contingency";
+  if (params.tier === "residential_diy") return "residential_diy";
+  if (params.path === "commercial") return "commercial_contingency";
+  return "residential_diy";
+}
+
 export default function SignupPage({
   searchParams,
 }: {
-  searchParams: Promise<{ ref?: string }>;
+  searchParams: Promise<{ ref?: string; path?: string; tier?: string }>;
 }) {
-  const { ref } = use(searchParams);
+  const params = use(searchParams);
+  const { ref } = params;
+  const defaultTier = defaultTierFromParams(params);
   const [state, action, pending] = useActionState(signUp, initialState);
 
   return (
@@ -33,7 +48,7 @@ export default function SignupPage({
         <CardHeader>
           <CardTitle className="text-lg">Create an account</CardTitle>
           <CardDescription>
-            Start appealing your Pennsylvania property assessment
+            Start appealing your Pennsylvania property assessment.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -53,7 +68,7 @@ export default function SignupPage({
             </div>
             <div className="space-y-2">
               <Label>Account type</Label>
-              <Select name="tier" defaultValue="residential_diy">
+              <Select name="tier" defaultValue={defaultTier}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>

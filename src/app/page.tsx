@@ -1,58 +1,22 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { getLatestClr } from "@/lib/clr";
 
-const STEPS = [
-  {
-    n: "01",
-    title: "Look up your property",
-    description:
-      "Search any Allegheny County address. We pull the county's assessment record for your parcel instantly — no account needed.",
-  },
-  {
-    n: "02",
-    title: "Get your savings score",
-    description:
-      "Our comp engine values your property from recent comparable sales, applies the Common Level Ratio, and tells you what an appeal is worth — and how likely it is to win.",
-  },
-  {
-    n: "03",
-    title: "File with confidence",
-    description:
-      "Generate an evidence-backed appeal letter, track deadlines and hearings, and file — yourself, or with our full-service team handling everything.",
-  },
-];
-
-const FEATURES: [string, string][] = [
-  [
-    "The county's own math",
-    "Assessments are supposed to track the Common Level Ratio. When yours doesn't, that gap is your case — and we quantify it to the dollar.",
-  ],
-  [
-    "Comparables, done properly",
-    "Sales pulled from county records and adjusted the way appraisers do it: time, size, condition, location.",
-  ],
-  [
-    "Outcome predictions",
-    "A model trained on historical BPAAR dispositions estimates your probability of a reduction before you file.",
-  ],
-  [
-    "Evidence-backed letters",
-    "One click produces a written submission grounded in your comps, the CLR calculation, and uploaded condition photos.",
-  ],
-  [
-    "Deadline tracking",
-    "Filing windows, hearing dates, and document checklists in one place, so nothing slips.",
-  ],
-  [
-    "Free to check",
-    "The savings score costs nothing and always will. Pay only if you want the appeal handled end to end.",
-  ],
-];
+export const metadata = {
+  title: "Pennsylvania property tax appeal analysis",
+  description:
+    "Equarra helps Pennsylvania homeowners and commercial property owners identify assessment overpayments using Common Level Ratio math and county data.",
+};
 
 export default async function LandingPage() {
   let clrPct = "50.14";
@@ -77,47 +41,35 @@ export default async function LandingPage() {
       <main className="flex-1">
         {/* Hero */}
         <section className="border-b">
-          <div className="mx-auto grid w-full max-w-6xl gap-12 px-6 py-16 sm:py-24 lg:grid-cols-[1.2fr_1fr] lg:items-center">
+          <div className="mx-auto grid w-full max-w-6xl gap-12 px-6 py-16 sm:py-24 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
             <div>
               <p className="font-mono text-xs tracking-widest text-muted-foreground uppercase">
-                Allegheny County · Tax year {taxYear}
+                Pennsylvania property tax appeals · Tax year {taxYear}
               </p>
               <h1 className="mt-5 font-serif text-5xl leading-[1.05] tracking-tight text-balance sm:text-6xl">
-                You might be paying taxes on a house{" "}
-                <em className="text-primary">that doesn&apos;t exist.</em>
+                Your assessment is supposed to follow the county&apos;s own ratio.
               </h1>
               <p className="mt-6 max-w-md text-lg text-muted-foreground">
                 If your assessment is above {clrPct}% of market value, the
-                county is taxing value your property doesn&apos;t have. Takes a
-                minute to check. Costs nothing.
+                county is taxing value your property doesn&apos;t have. Equarra
+                finds that gap for homeowners and commercial property owners.
               </p>
-
-              <form
-                action="/score"
-                method="GET"
-                className="mt-8 flex w-full max-w-md flex-col gap-2 sm:flex-row"
-              >
-                <Input
-                  name="q"
-                  placeholder="429 Forbes Ave"
-                  className="h-11 flex-1 bg-card text-base"
-                  required
-                />
-                <Button type="submit" size="lg" className="h-11 px-5">
-                  Check my address
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                <Button size="lg" render={<Link href="/residential" />}>
+                  For Homeowners
                   <ArrowRight data-icon="inline-end" />
                 </Button>
-              </form>
-              <p className="mt-3 font-mono text-xs text-muted-foreground">
-                No account. No credit card. County data only.
-              </p>
+                <Button size="lg" variant="outline" render={<Link href="/commercial" />}>
+                  For Property Owners
+                  <ArrowRight data-icon="inline-end" />
+                </Button>
+              </div>
             </div>
 
-            {/* Worked example, receipt-style */}
             <div className="border bg-card">
               <div className="border-b px-5 py-3">
                 <p className="font-mono text-xs tracking-widest text-muted-foreground uppercase">
-                  Worked example
+                  CLR wedge example
                 </p>
               </div>
               <div className="space-y-0 px-5 py-4 text-sm">
@@ -151,7 +103,7 @@ export default async function LandingPage() {
               <div className="border-t bg-muted/50 px-5 py-3">
                 <p className="font-mono text-xs text-muted-foreground">
                   ≈ ${annualSavings.toLocaleString()}/yr back at an assumed 25
-                  mills (estimate — actual millage varies by municipality),
+                  mills (estimate; actual millage varies by municipality),
                   every year until reassessment
                 </p>
               </div>
@@ -159,39 +111,69 @@ export default async function LandingPage() {
           </div>
         </section>
 
-        {/* How it works */}
         <section className="mx-auto w-full max-w-6xl px-6 py-16 sm:py-24">
-          <div className="grid gap-10 lg:grid-cols-[1fr_2fr]">
+          <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
               <p className="font-mono text-xs tracking-widest text-muted-foreground uppercase">
-                How it works
+                Choose your path
               </p>
               <h2 className="mt-4 font-serif text-3xl tracking-tight sm:text-4xl">
-                Three steps. The first two take a minute.
+                Same CLR math. Different evidence.
               </h2>
             </div>
-            <ol>
-              {STEPS.map((step) => (
-                <li
-                  key={step.n}
-                  className="grid gap-3 border-t py-6 first:border-t-0 first:pt-0 sm:grid-cols-[4rem_1fr] sm:gap-6"
+            <Link
+              href="/counties"
+              className="text-sm font-medium underline underline-offset-4"
+            >
+              See county-level assessment gaps
+            </Link>
+          </div>
+          <div className="mt-8 grid gap-4 md:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle>Residential</CardTitle>
+                <CardDescription>
+                  For homeowners checking a house, condo, or small residential
+                  property.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  Start with a free score, then generate a DIY appeal letter with
+                  comparable sales, CLR math, and condition-photo evidence.
+                </p>
+                <Button className="mt-5" render={<Link href="/residential" />}>
+                  Check my home
+                  <ArrowRight data-icon="inline-end" />
+                </Button>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>Commercial</CardTitle>
+                <CardDescription>
+                  For property owners evaluating income-producing assets and
+                  portfolios.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  Layer commercial comparable sales with rent rolls, T-12s, income
+                  approach support, and portfolio prioritization.
+                </p>
+                <Button
+                  className="mt-5"
+                  variant="outline"
+                  render={<Link href="/commercial" />}
                 >
-                  <span className="font-mono text-sm text-muted-foreground">
-                    {step.n}
-                  </span>
-                  <div>
-                    <h3 className="text-lg font-medium">{step.title}</h3>
-                    <p className="mt-1.5 max-w-lg text-muted-foreground">
-                      {step.description}
-                    </p>
-                  </div>
-                </li>
-              ))}
-            </ol>
+                  Check my property
+                  <ArrowRight data-icon="inline-end" />
+                </Button>
+              </CardContent>
+            </Card>
           </div>
         </section>
 
-        {/* CLR argument */}
         <section className="border-y bg-card">
           <div className="mx-auto w-full max-w-6xl px-6 py-16 sm:py-24">
             <p className="font-mono text-xs tracking-widest text-muted-foreground uppercase">
@@ -206,7 +188,7 @@ export default async function LandingPage() {
               <p className="text-muted-foreground">
                 Under the {taxYear} Common Level Ratio, your assessment should
                 be about {clrPct}% of what your property would actually sell
-                for. Many sit far above that — and those owners quietly overpay
+                for. Many sit far above that, and those owners quietly overpay
                 every single year.
               </p>
               <p className="text-muted-foreground">
@@ -215,47 +197,6 @@ export default async function LandingPage() {
                 evidence an appeal board expects to see.
               </p>
             </div>
-            <Button className="mt-8" size="lg" render={<Link href="/score" />}>
-              Run my free savings score
-              <ArrowRight data-icon="inline-end" />
-            </Button>
-          </div>
-        </section>
-
-        {/* Features */}
-        <section className="mx-auto w-full max-w-6xl px-6 py-16 sm:py-24">
-          <div className="flex flex-wrap items-end justify-between gap-4">
-            <h2 className="font-serif text-3xl tracking-tight sm:text-4xl">
-              Everything an appeal needs
-            </h2>
-            <p className="max-w-sm text-sm text-muted-foreground">
-              For homeowners doing it themselves, and commercial portfolios
-              that need it handled.
-            </p>
-          </div>
-          <dl className="mt-10 grid gap-x-12 sm:grid-cols-2">
-            {FEATURES.map(([title, description]) => (
-              <div key={title} className="border-t py-5">
-                <dt className="font-medium">{title}</dt>
-                <dd className="mt-1.5 text-sm text-muted-foreground">
-                  {description}
-                </dd>
-              </div>
-            ))}
-          </dl>
-        </section>
-
-        {/* Closing CTA */}
-        <section className="border-t">
-          <div className="mx-auto flex w-full max-w-6xl flex-col items-start gap-6 px-6 py-16 sm:py-20">
-            <h2 className="max-w-2xl font-serif text-4xl leading-tight tracking-tight sm:text-5xl">
-              The county won&apos;t call you about this.{" "}
-              <em className="text-primary">Check anyway.</em>
-            </h2>
-            <Button size="lg" className="h-11 px-6" render={<Link href="/score" />}>
-              Check my property
-              <ArrowRight data-icon="inline-end" />
-            </Button>
           </div>
         </section>
       </main>

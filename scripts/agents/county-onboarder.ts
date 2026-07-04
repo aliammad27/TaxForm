@@ -11,7 +11,7 @@ try {
   process.loadEnvFile();
 } catch {}
 
-import { mkdirSync, readFileSync, writeFileSync, existsSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { getPool } from "../ingest/lib";
 import { STEB_2026 } from "../../src/lib/steb";

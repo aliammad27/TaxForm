@@ -4,6 +4,7 @@ import { getPool } from "@/lib/db";
 import { STEB_2026, appealWedgePct, countySlug } from "@/lib/steb";
 import geo from "@/lib/pa-counties-geo.json";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import {
@@ -167,6 +168,26 @@ export default async function CountiesPage() {
             </TableBody>
           </Table>
         </div>
+
+        <section className="mt-12 border-t pt-8">
+          <h2 className="font-serif text-2xl tracking-tight">
+            Turn county-level math into a property-specific score
+          </h2>
+          <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
+            The CLR wedge is county-wide. Your appeal depends on your property&apos;s
+            market value, class, assessment, and evidence.
+          </p>
+          <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+            <Button render={<Link href="/residential" />}>
+              Check my home
+              <ArrowRight data-icon="inline-end" />
+            </Button>
+            <Button variant="outline" render={<Link href="/commercial" />}>
+              Check my property
+              <ArrowRight data-icon="inline-end" />
+            </Button>
+          </div>
+        </section>
 
         <p className="mt-8 max-w-2xl text-xs text-muted-foreground">
           &ldquo;Assessed below market&rdquo; is 100% minus the county&apos;s

@@ -19,6 +19,7 @@ import { STATUS_LABELS } from "@/lib/appeal-status";
 export default async function DashboardPage() {
   const profile = await requireClient();
   const supabase = await createClient();
+  const commercialTier = profile.tier !== "residential_diy";
 
   const [{ count: propertyCount }, { data: appeals }] = await Promise.all([
     supabase
@@ -52,6 +53,25 @@ export default async function DashboardPage() {
         <StatCard label="Active appeals" value={active.length} />
         <StatCard label="Total appeals" value={appeals?.length ?? 0} />
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>
+            {commercialTier ? "Add rent roll and T-12 evidence" : "Add condition evidence"}
+          </CardTitle>
+          <CardDescription>
+            {commercialTier
+              ? "Commercial appeals get stronger when operating statements can support an income-approach valuation."
+              : "Residential appeals can use property photos to document condition issues that affect comparable-sale adjustments."}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button variant="outline" render={<Link href="/dashboard/documents" />}>
+            {commercialTier ? "Upload operating documents" : "Upload condition photos"}
+            <ArrowRight data-icon="inline-end" />
+          </Button>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>

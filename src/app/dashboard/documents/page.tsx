@@ -68,8 +68,9 @@ type PropRow = {
 };
 
 export default async function DocumentsPage() {
-  await requireClient();
+  const profile = await requireClient();
   const supabase = await createClient();
+  const commercialTier = profile.tier !== "residential_diy";
 
   const [{ data: docsData }, { data: propsData }] = await Promise.all([
     supabase
@@ -88,20 +89,27 @@ export default async function DocumentsPage() {
     <div className="space-y-6">
       <PageHeader
         title="Documents"
-        description="Upload evidence — rent rolls, operating statements, and condition photos."
+        description={
+          commercialTier
+            ? "Upload rent rolls, operating statements, and supporting property evidence."
+            : "Upload condition photos and other evidence for your residential appeal."
+        }
       />
 
       <Card>
         <CardHeader>
           <CardTitle>Upload</CardTitle>
           <CardDescription>
-            Rent rolls and T-12s are parsed into structured data for the income
-            approach. Photos are analyzed for condition evidence that feeds
-            your comps and appeal letter.
+            {commercialTier
+              ? "Rent rolls and T-12s are parsed into structured data for the income approach. Photos can still support property-condition evidence."
+              : "Photos are analyzed for condition evidence that feeds your comps and appeal letter."}
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <UploadForm properties={properties} />
+          <UploadForm
+            properties={properties}
+            defaultType={commercialTier ? "rent_roll" : "photo"}
+          />
         </CardContent>
       </Card>
 

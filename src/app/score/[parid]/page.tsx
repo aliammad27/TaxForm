@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowRight } from "lucide-react";
 import { computeSavingsScore } from "@/lib/savings";
+import type { ParcelSummary } from "@/lib/parcels";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -38,6 +39,11 @@ function probabilityLabel(p: number): { label: string; tone: string; bar: string
   };
 }
 
+function isCommercialParcel(subject: ParcelSummary): boolean {
+  const text = `${subject.class_desc ?? ""} ${subject.use_desc ?? ""}`.toUpperCase();
+  return subject.class === "C" || text.includes("COMMERCIAL");
+}
+
 export default async function ScorePage({
   params,
 }: {
@@ -48,8 +54,10 @@ export default async function ScorePage({
   if (!score) notFound();
 
   const subject = score.comp_result.subject;
+  const commercial = isCommercialParcel(subject);
   const { label, tone, bar } = probabilityLabel(score.probability);
   const hasCase = score.assessment_reduction > 0;
+  const signupHref = commercial ? "/signup?path=commercial" : "/signup?path=residential";
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -64,6 +72,11 @@ export default async function ScorePage({
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
           {subject.muni_desc} · {subject.class_desc ?? subject.class}
+        </p>
+        <p className="mt-3 max-w-2xl text-sm text-muted-foreground">
+          {commercial
+            ? "Commercial score: comparable sales are weighted with commercial area adjustments, and a processed T-12 can add an income-approach value."
+            : "Residential score: comparable sales are adjusted for homeowner-scale factors like living area, bathrooms, and documented condition."}
         </p>
 
         <div className="mt-8 grid gap-4 sm:grid-cols-3">
@@ -112,7 +125,7 @@ export default async function ScorePage({
             </CardDescription>
           </CardHeader>
           <CardContent className="text-sm">
-            {score.valuation?.income_fmv ? (
+            {commercial && score.valuation?.income_fmv ? (
               <>
                 <div className="flex justify-between gap-4 py-2">
                   <span className="text-muted-foreground">
@@ -142,10 +155,33 @@ export default async function ScorePage({
                   <span className="font-mono">{usd(score.estimated_fmv)}</span>
                 </div>
               </>
+            ) : commercial ? (
+              <>
+                <div className="flex justify-between gap-4 py-2">
+                  <span className="text-muted-foreground">
+                    Sales-comparison value (from comparable commercial sales)
+                  </span>
+                  <span className="font-mono">
+                    {usd(score.valuation?.comp_fmv ?? score.estimated_fmv)}
+                  </span>
+                </div>
+                <div className="flex justify-between gap-4 border-t border-dashed py-2">
+                  <span className="text-muted-foreground">
+                    Income-approach value (upload a processed T-12 to enable)
+                  </span>
+                  <span className="font-mono">Pending</span>
+                </div>
+                <div className="flex justify-between gap-4 border-t border-dashed py-2">
+                  <span className="text-muted-foreground">
+                    Estimated fair market value currently used
+                  </span>
+                  <span className="font-mono">{usd(score.estimated_fmv)}</span>
+                </div>
+              </>
             ) : (
               <div className="flex justify-between gap-4 py-2">
                 <span className="text-muted-foreground">
-                  Estimated fair market value (from comparable sales)
+                  Estimated fair market value (from comparable residential sales)
                 </span>
                 <span className="font-mono">{usd(score.estimated_fmv)}</span>
               </div>
@@ -226,11 +262,12 @@ export default async function ScorePage({
               <em className="text-primary">every year</em>, until you appeal.
             </h2>
             <p className="mt-3 max-w-md text-sm text-muted-foreground">
-              Create a free account to generate your appeal letter, track
-              deadlines, and file with the county.
+              {commercial
+                ? "Create a commercial account to upload rent rolls and T-12s, track deadlines, and move viable parcels into an appeal workflow."
+                : "Create a free account to generate your appeal letter, upload condition photos, track deadlines, and file with the county."}
             </p>
-            <Button size="lg" className="mt-5 h-11 px-6" render={<Link href="/signup" />}>
-              Start my appeal
+            <Button size="lg" className="mt-5 h-11 px-6" render={<Link href={signupHref} />}>
+              {commercial ? "Start commercial review" : "Start my appeal"}
               <ArrowRight data-icon="inline-end" />
             </Button>
           </div>
