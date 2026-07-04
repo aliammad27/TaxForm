@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Building2, Gavel, Landmark, Plus, ArrowRight } from "lucide-react";
+import { ArrowRight, Plus } from "lucide-react";
 import { requireClient } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import {
@@ -48,17 +48,9 @@ export default async function DashboardPage() {
       </PageHeader>
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <StatCard
-          label="Properties"
-          value={propertyCount ?? 0}
-          icon={Building2}
-        />
-        <StatCard label="Active appeals" value={active.length} icon={Gavel} />
-        <StatCard
-          label="Total appeals"
-          value={appeals?.length ?? 0}
-          icon={Landmark}
-        />
+        <StatCard label="Properties" value={propertyCount ?? 0} />
+        <StatCard label="Active appeals" value={active.length} />
+        <StatCard label="Total appeals" value={appeals?.length ?? 0} />
       </div>
 
       <Card>
@@ -71,7 +63,6 @@ export default async function DashboardPage() {
         <CardContent>
           {!appeals?.length ? (
             <EmptyState
-              icon={Gavel}
               title="No appeals yet"
               description="Add a property, run its savings score, then start an appeal."
             >
@@ -111,6 +102,23 @@ export default async function DashboardPage() {
           )}
         </CardContent>
       </Card>
+
+      {profile.referral_code && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Refer a neighbor</CardTitle>
+            <CardDescription>
+              Overassessment runs street by street — if your appeal has legs,
+              your neighbors&apos; probably do too. Share your link:
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <code className="block w-fit rounded-md bg-muted px-3 py-2 font-mono text-sm">
+              {`${process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"}/signup?ref=${profile.referral_code}`}
+            </code>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

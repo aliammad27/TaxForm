@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { nextAppealWindow } from "@/lib/appeal-window";
+import { DEFAULT_COUNTY, getCountyAdapter } from "@/lib/counties/registry";
 import { STATUS_ORDER, type AppealStatus } from "@/lib/appeal-status";
 
 export async function createAppeal(formData: FormData) {
@@ -14,7 +14,13 @@ export async function createAppeal(formData: FormData) {
   if (!user) return;
 
   const parid = String(formData.get("parid"));
-  const window = nextAppealWindow();
+  const { data: parcel } = await supabase
+    .from("parcels")
+    .select("county")
+    .eq("parid", parid)
+    .single();
+  const adapter = getCountyAdapter(parcel?.county ?? DEFAULT_COUNTY);
+  const window = await adapter.appealWindow();
 
   const { data: appeal } = await supabase
     .from("appeals")

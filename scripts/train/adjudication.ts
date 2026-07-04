@@ -1,5 +1,5 @@
 /**
- * Trains the Predictive Adjudication Model on historical BPAAR dispositions
+ * Trains the Predictive Adjudication Model on historical dispositions
  * (`appeal_outcomes`) and stores coefficients in `model_versions`.
  *
  * Two components:
@@ -9,7 +9,10 @@
  * Features use the county's stated fair market value as the historical proxy
  * for the over-assessment gap (at request time the Comp Engine's FMV is used).
  *
- *   npm run train:adjudication
+ *   npm run train:adjudication                        # Allegheny ('adjudication')
+ *   npm run train:adjudication -- --county York      # local model once York
+ *                                                    # accumulates >=300 outcomes
+ *                                                    # ('adjudication:York')
  */
 import { getPool } from "../ingest/lib";
 import {
@@ -76,7 +79,15 @@ function trainLinear(X: number[][], y: number[], epochs = 500, lr = 0.3): number
   return w;
 }
 
+// Counties are promoted from the pooled heuristic to a local model once they
+// accumulate this many usable dispositions (keep in sync with
+// LOCAL_MODEL_PROMOTION_THRESHOLD in src/lib/adjudication.ts).
+const PROMOTION_THRESHOLD = 300;
+
 async function main() {
+  const countyArg = process.argv.indexOf("--county");
+  const county = countyArg > -1 ? process.argv[countyArg + 1] : "Allegheny";
+  const name = county === "Allegheny" ? "adjudication" : `adjudication:${county}`;
   const pool = getPool();
 
   const { rows } = await pool.query<TrainingRow>(
@@ -88,11 +99,14 @@ async function main() {
        clr.ratio::float8 as clr,
        p.fair_market_total::float8 as fmv
      from appeal_outcomes ao
-     left join common_level_ratio clr on clr.tax_year = ao.tax_year
-     left join parcels p on p.parid = ao.parid
-     where ao.pre_appeal_total is not null
+     left join common_level_ratio clr
+       on clr.tax_year = ao.tax_year and clr.county = ao.county
+     left join parcels p on p.parid = ao.parid and p.county = ao.county
+     where ao.county = $1
+       and ao.pre_appeal_total is not null
        and ao.post_appeal_total is not null
-       and ao.pre_appeal_total > 0`
+       and ao.pre_appeal_total > 0`,
+    [county]
   );
 
   const X: number[][] = [];
@@ -111,13 +125,16 @@ async function main() {
     }
   }
 
-  if (X.length < 200) {
+  if (X.length < PROMOTION_THRESHOLD) {
     throw new Error(
-      `Only ${X.length} usable training rows - ingest more appeal outcomes first (npm run ingest:appeals).`
+      `${county} has only ${X.length} usable dispositions (< ${PROMOTION_THRESHOLD}); ` +
+        `it stays on the pooled heuristic. Ingest more outcomes first.`
     );
   }
 
-  console.log(`training on ${X.length} dispositions (${reductionRows.length} reductions)`);
+  console.log(
+    `training ${name} on ${X.length} dispositions (${reductionRows.length} reductions)`
+  );
 
   const logistic = trainLogistic(X, yReduced);
   const linear = trainLinear(
@@ -151,21 +168,23 @@ async function main() {
   console.log(metrics);
 
   const { rows: versions } = await pool.query(
-    `select coalesce(max(version), 0) + 1 as next from model_versions where name = 'adjudication'`
+    `select coalesce(max(version), 0) + 1 as next from model_versions where name = $1`,
+    [name]
   );
   const version = Number(versions[0].next);
 
   await pool.query(
     `insert into model_versions (name, version, coefficients, metrics)
-     values ('adjudication', $1, $2, $3)`,
+     values ($1, $2, $3, $4)`,
     [
+      name,
       version,
       JSON.stringify({ logistic, linear, feature_names: FEATURE_NAMES }),
       JSON.stringify(metrics),
     ]
   );
 
-  console.log(`stored model_versions('adjudication', v${version})`);
+  console.log(`stored model_versions('${name}', v${version})`);
   await pool.end();
 }
 

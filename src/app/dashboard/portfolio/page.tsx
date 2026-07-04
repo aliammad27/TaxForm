@@ -1,12 +1,5 @@
 import Link from "next/link";
-import {
-  Building2,
-  ChartNoAxesCombined,
-  CircleDollarSign,
-  Download,
-  Gavel,
-  Landmark,
-} from "lucide-react";
+import { Download } from "lucide-react";
 import { requireClient } from "@/lib/auth";
 import { getPortfolio } from "@/lib/portfolio";
 import { STATUS_LABELS } from "@/lib/appeal-status";
@@ -56,23 +49,18 @@ export default async function PortfolioPage() {
       </PageHeader>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard
-          label="Total assessed value"
-          value={usd(totals.assessed)}
-          icon={Landmark}
-        />
+        <StatCard label="Total assessed value" value={usd(totals.assessed)} />
         <StatCard
           label="Projected annual savings"
           value={usd(totals.savings)}
-          icon={CircleDollarSign}
           valueClassName="text-success"
+          hint="Estimate — assumes ~25 mills combined millage per property."
         />
         <StatCard
           label="Properties scored"
           value={`${totals.scored}/${rows.length}`}
-          icon={ChartNoAxesCombined}
         />
-        <StatCard label="Under appeal" value={totals.appealing} icon={Gavel} />
+        <StatCard label="Under appeal" value={totals.appealing} />
       </div>
 
       <Card>
@@ -82,7 +70,6 @@ export default async function PortfolioPage() {
         <CardContent>
           {rows.length === 0 ? (
             <EmptyState
-              icon={Building2}
               title="No properties yet"
               description="Add properties to build your portfolio view."
             >
@@ -101,7 +88,9 @@ export default async function PortfolioPage() {
                   <TableHead>Property</TableHead>
                   <TableHead className="text-right">Assessed</TableHead>
                   <TableHead className="text-right">Est. market value</TableHead>
-                  <TableHead className="text-right">Annual savings</TableHead>
+                  <TableHead className="text-right">
+                    Annual savings (est.)
+                  </TableHead>
                   <TableHead className="text-right">Probability</TableHead>
                   <TableHead>Appeal</TableHead>
                 </TableRow>

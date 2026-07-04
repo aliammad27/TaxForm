@@ -1,4 +1,3 @@
-import { FileText } from "lucide-react";
 import { requireClient } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
@@ -58,6 +57,7 @@ type DocRow = {
   parid: string | null;
   original_name: string | null;
   processing_status: string;
+  needs_review: boolean;
   extracted_json: unknown;
   created_at: string;
 };
@@ -74,7 +74,7 @@ export default async function DocumentsPage() {
   const [{ data: docsData }, { data: propsData }] = await Promise.all([
     supabase
       .from("documents")
-      .select("id, type, parid, original_name, processing_status, extracted_json, created_at")
+      .select("id, type, parid, original_name, processing_status, needs_review, extracted_json, created_at")
       .order("created_at", { ascending: false }),
     supabase.from("client_properties").select("parid, parcels(full_address)"),
   ]);
@@ -112,7 +112,6 @@ export default async function DocumentsPage() {
         <CardContent>
           {docs.length === 0 ? (
             <EmptyState
-              icon={FileText}
               title="No documents uploaded yet"
               description="Uploaded documents and their extracted data will appear here."
             />
@@ -122,21 +121,21 @@ export default async function DocumentsPage() {
                 const summary = extractedSummary(d.type, d.extracted_json);
                 return (
                   <li key={d.id} className="flex items-center justify-between gap-4 py-3">
-                    <div className="flex min-w-0 items-center gap-3">
-                      <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-foreground">
-                        <FileText className="size-4" />
-                      </span>
-                      <div className="min-w-0">
-                        <p className="truncate font-medium">
-                          {d.original_name ?? TYPE_LABELS[d.type]}
-                        </p>
-                        <p className="truncate text-sm text-muted-foreground">
-                          {TYPE_LABELS[d.type]}
-                          {summary && <> · {summary}</>}
-                        </p>
-                      </div>
+                    <div className="min-w-0">
+                      <p className="truncate font-medium">
+                        {d.original_name ?? TYPE_LABELS[d.type]}
+                      </p>
+                      <p className="truncate text-sm text-muted-foreground">
+                        {TYPE_LABELS[d.type]}
+                        {summary && <> · {summary}</>}
+                      </p>
                     </div>
                     <div className="flex shrink-0 items-center gap-3">
+                      {d.needs_review && (
+                        <Badge variant="outline" className="text-amber-700">
+                          Needs review
+                        </Badge>
+                      )}
                       <Badge
                         variant={
                           d.processing_status === "processed"

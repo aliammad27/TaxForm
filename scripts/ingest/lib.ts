@@ -93,6 +93,13 @@ export function parseDate(value: unknown): string | null {
     const year = yy >= 50 ? 1900 + yy : 2000 + yy;
     return `${year}-${month}-${m[1].padStart(2, "0")}`;
   }
+  // DD-MON-YYYY (e.g. 07-JUL-2020, York PASDA)
+  m = s.match(/^(\d{1,2})-([A-Za-z]{3})-(\d{4})$/);
+  if (m) {
+    const month = MONTHS[m[2].toLowerCase()];
+    if (!month) return null;
+    return `${m[3]}-${month}-${m[1].padStart(2, "0")}`;
+  }
   return null;
 }
 

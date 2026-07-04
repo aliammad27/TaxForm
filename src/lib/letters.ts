@@ -1,8 +1,18 @@
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import { getPool } from "./db";
-import { textEmbedding, toVectorLiteral } from "./embeddings";
+import { embedTexts, toVectorLiteral } from "./embeddings";
 import { CLAUDE_MODEL, getAnthropic, isAnthropicConfigured, textFromMessage } from "./anthropic";
+import { getCountyAdapter } from "./counties/registry";
 import type { SavingsScore } from "./savings";
+
+async function getBoardName(county: string): Promise<string> {
+  try {
+    const window = await getCountyAdapter(county).appealWindow();
+    return window.boardName;
+  } catch {
+    return "County Board of Assessment Appeals";
+  }
+}
 
 const usd = (n: number) => `$${Math.round(n).toLocaleString()}`;
 
@@ -15,10 +25,11 @@ export type LetterInput = {
 type RagChunk = { source: string; title: string; content: string };
 
 async function getRagContext(query: string, count = 5): Promise<RagChunk[]> {
+  const [embedding] = await embedTexts([query], "query");
   const { rows } = await getPool().query<RagChunk>(
     `select source, title, content
      from match_letter_chunks($1::vector, $2)`,
-    [toVectorLiteral(textEmbedding(query)), count]
+    [toVectorLiteral(embedding), count]
   );
   return rows;
 }
@@ -35,7 +46,7 @@ function compTable(score: SavingsScore): string {
 }
 
 /** Deterministic letter used when Claude is unavailable. */
-function templateLetter(input: LetterInput): string {
+function templateLetter(input: LetterInput, boardName: string): string {
   const { score, ownerName } = input;
   const s = score.comp_result.subject;
   const clrPct = (score.clr * 100).toFixed(2);
@@ -47,13 +58,13 @@ Property: ${s.full_address}
 Owner: ${ownerName}
 Tax Year: ${score.tax_year}
 
-To the Board of Property Assessment Appeals and Review:
+To the ${boardName}:
 
 This letter supports the annual assessment appeal for the property identified above. The property is currently assessed at ${usd(score.current_assessed)}. Recent arm's-length sales of comparable properties support a current fair market value of ${usd(score.estimated_fmv)}. Application of the ${score.tax_year} Common Level Ratio of ${clrPct}% yields an indicated assessed value of ${usd(score.implied_assessed)}. The owner respectfully requests that the assessment be reduced accordingly.
 
 PROPERTY DESCRIPTION
 
-The subject is a ${s.use_desc ?? s.class_desc ?? "property"} located in ${s.muni_desc ?? "Allegheny County"} (${s.school_desc ?? ""} School District)${s.finished_living_area ? ` with approximately ${Math.round(s.finished_living_area).toLocaleString()} square feet of finished living area` : ""}${s.bedrooms ? `, ${s.bedrooms} bedrooms` : ""}${s.full_baths ? `, ${s.full_baths} full bath(s)` : ""}${s.year_built ? `, built in ${s.year_built}` : ""}.
+The subject is a ${s.use_desc ?? s.class_desc ?? "property"} located in ${s.muni_desc ?? `${s.county} County`} (${s.school_desc ?? ""} School District)${s.finished_living_area ? ` with approximately ${Math.round(s.finished_living_area).toLocaleString()} square feet of finished living area` : ""}${s.bedrooms ? `, ${s.bedrooms} bedrooms` : ""}${s.full_baths ? `, ${s.full_baths} full bath(s)` : ""}${s.year_built ? `, built in ${s.year_built}` : ""}.
 
 COMPARABLE SALES ANALYSIS
 
@@ -82,12 +93,14 @@ export async function generateLetterText(input: LetterInput): Promise<{
   text: string;
   method: "claude" | "template";
 }> {
-  if (!isAnthropicConfigured()) {
-    return { text: templateLetter(input), method: "template" };
-  }
-
   const { score, ownerName } = input;
   const s = score.comp_result.subject;
+  const boardName = await getBoardName(s.county);
+
+  if (!isAnthropicConfigured()) {
+    return { text: templateLetter(input, boardName), method: "template" };
+  }
+
   const rag = await getRagContext(
     `assessment appeal letter comparable sales common level ratio ${s.class_desc ?? ""} ${input.conditionContext ? "property condition deferred maintenance" : ""}`
   );
@@ -96,7 +109,7 @@ export async function generateLetterText(input: LetterInput): Promise<{
     const response = await getAnthropic().messages.create({
       model: CLAUDE_MODEL,
       max_tokens: 4000,
-      system: `You draft written submissions for Allegheny County property assessment appeals before the Board of Property Assessment Appeals and Review (BPAAR). Write in plain, factual, professional prose. Never invent facts, comparables, or numbers - use only the data provided. Follow the structure and practices in the reference guidance. Output only the letter text, no commentary.
+      system: `You draft written submissions for ${s.county} County (PA) property assessment appeals before the ${boardName}. Write in plain, factual, professional prose. Never invent facts, comparables, or numbers - use only the data provided. Follow the structure and practices in the reference guidance. Output only the letter text, no commentary.
 
 REFERENCE GUIDANCE:
 ${rag.map((c) => `[${c.title}] ${c.content}`).join("\n\n")}`,
@@ -122,7 +135,7 @@ ${rag.map((c) => `[${c.title}] ${c.content}`).join("\n\n")}`,
     return { text: textFromMessage(response), method: "claude" };
   } catch (err) {
     console.error("Claude letter generation failed; using template", err);
-    return { text: templateLetter(input), method: "template" };
+    return { text: templateLetter(input, boardName), method: "template" };
   }
 }
 

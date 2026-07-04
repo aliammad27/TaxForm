@@ -8,9 +8,11 @@
  *    candidate retrieval. No external API calls, so 580k parcels can be
  *    embedded during ingestion for free.
  *
- * 2. Text embeddings (384 dims) - feature-hashing embeddings for the appeal
- *    letter RAG store. Deterministic and dependency-free; swap in a hosted
- *    embedding model (e.g. Voyage) later without schema changes.
+ * 2. Text embeddings (384 dims) - Voyage AI when VOYAGE_API_KEY is set
+ *    (truncated Matryoshka embeddings, so 384 dims keeps the schema), with a
+ *    deterministic feature-hashing fallback otherwise. The store and queries
+ *    must share one space: re-run scripts/ingest/letter-chunks.ts after
+ *    enabling or disabling Voyage.
  */
 
 export const PARCEL_VECTOR_DIMS = 16;
@@ -131,6 +133,68 @@ export function textEmbedding(text: string): number[] {
   }
   const norm = Math.sqrt(v.reduce((s, x) => s + x * x, 0)) || 1;
   return v.map((x) => x / norm);
+}
+
+const VOYAGE_MODEL = "voyage-3.5-lite";
+
+/**
+ * Voyage text embeddings, truncated to the store's 384 dims. Voyage's
+ * Matryoshka-trained models keep most of their quality under truncation, so
+ * we request the smallest dimension above 384 (512) and slice + renormalize.
+ */
+async function voyageEmbedding(
+  texts: string[],
+  inputType: "query" | "document"
+): Promise<number[][]> {
+  const res = await fetch("https://api.voyageai.com/v1/embeddings", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${process.env.VOYAGE_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: VOYAGE_MODEL,
+      input: texts,
+      input_type: inputType,
+      output_dimension: 512,
+    }),
+  });
+  if (!res.ok) {
+    throw new Error(`Voyage embeddings failed: ${res.status} ${await res.text()}`);
+  }
+  const json = (await res.json()) as {
+    data: { index: number; embedding: number[] }[];
+  };
+  return json.data
+    .sort((a, b) => a.index - b.index)
+    .map(({ embedding }) => {
+      const v = embedding.slice(0, TEXT_VECTOR_DIMS);
+      const norm = Math.sqrt(v.reduce((s, x) => s + x * x, 0)) || 1;
+      return v.map((x) => x / norm);
+    });
+}
+
+export function isVoyageConfigured(): boolean {
+  return Boolean(process.env.VOYAGE_API_KEY);
+}
+
+/**
+ * Text embeddings for the letter RAG store: Voyage when configured, hashing
+ * fallback otherwise. Both sides (chunk ingestion and query) call this, so
+ * they stay in the same embedding space.
+ */
+export async function embedTexts(
+  texts: string[],
+  inputType: "query" | "document"
+): Promise<number[][]> {
+  if (isVoyageConfigured()) {
+    try {
+      return await voyageEmbedding(texts, inputType);
+    } catch (err) {
+      console.error("Voyage embedding failed; using hashing fallback", err);
+    }
+  }
+  return texts.map(textEmbedding);
 }
 
 /** Formats a JS number array as a pgvector literal. */

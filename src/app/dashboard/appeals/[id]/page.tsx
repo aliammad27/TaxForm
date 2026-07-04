@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, FileText } from "lucide-react";
+import { AlertTriangle, ArrowLeft, FileText } from "lucide-react";
 import { requireClient } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { computeSavingsScore } from "@/lib/savings";
@@ -59,10 +59,19 @@ export default async function AppealDetailPage({
     getOrCreatePrediction(appeal.id).catch(() => null),
     supabase
       .from("documents")
-      .select("id, type, original_name, processing_status, created_at")
+      .select("id, type, original_name, processing_status, needs_review, extracted_json, created_at")
       .eq("appeal_id", appeal.id)
       .order("created_at", { ascending: false }),
   ]);
+
+  const letterDoc = documents?.find(
+    (d) => d.type === "appeal_letter" && d.needs_review
+  );
+  const verificationIssues = (
+    letterDoc?.extracted_json as {
+      verification?: { issues?: { kind: string; found: string; expected: string | null }[] };
+    } | null
+  )?.verification?.issues;
 
   return (
     <div className="space-y-6">
@@ -87,6 +96,32 @@ export default async function AppealDetailPage({
           <Badge>{STATUS_LABELS[appeal.status] ?? appeal.status}</Badge>
         </div>
       </div>
+
+      {letterDoc && (
+        <div className="flex gap-3 rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm">
+          <AlertTriangle className="mt-0.5 size-4 shrink-0 text-amber-600" />
+          <div>
+            <p className="font-medium text-amber-900 dark:text-amber-200">
+              Appeal letter needs review before filing
+            </p>
+            <p className="mt-1 text-amber-800/90 dark:text-amber-300/90">
+              Automated verification found figures or addresses in the letter that
+              do not match the valuation data. The appeal was not advanced to
+              &ldquo;ready to file.&rdquo;
+            </p>
+            {verificationIssues && verificationIssues.length > 0 && (
+              <ul className="mt-2 list-inside list-disc space-y-0.5 text-amber-800/80 dark:text-amber-300/80">
+                {verificationIssues.slice(0, 5).map((issue, i) => (
+                  <li key={i}>
+                    {issue.kind}: {issue.found}
+                    {issue.expected ? ` (expected ${issue.expected})` : ""}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
@@ -129,6 +164,11 @@ export default async function AppealDetailPage({
                     {usd(score.estimated_annual_savings)}
                   </span>
                 </div>
+                <p className="text-xs text-muted-foreground">
+                  {score.millage?.source === "actual"
+                    ? `Savings use the municipality's combined millage of ${score.millage.mills} mills.`
+                    : "Savings estimate assumes ~25 mills combined millage; actual millage varies by municipality and school district."}
+                </p>
               </>
             ) : (
               <p className="text-muted-foreground">
@@ -173,15 +213,14 @@ export default async function AppealDetailPage({
                   </span>
                 </div>
                 <p className="pt-2 text-xs text-muted-foreground">
-                  Modeled on{" "}
-                  {prediction.training_note ?? "historical BPAAR dispositions"}
-                  .
+                  {prediction.confidence_source === "trained"
+                    ? `Modeled on ${prediction.training_note}.`
+                    : `This is ${prediction.training_note}.`}
                 </p>
               </>
             ) : (
               <p className="text-muted-foreground">
-                Prediction unavailable — train the adjudication model first
-                (npm run train:adjudication).
+                Prediction unavailable for this appeal.
               </p>
             )}
           </CardContent>
@@ -190,10 +229,12 @@ export default async function AppealDetailPage({
 
       <Card>
         <CardHeader>
-          <CardTitle>Appeal letter</CardTitle>
+          <CardTitle>Appeal letter &amp; evidence package</CardTitle>
           <CardDescription>
-            Generates a written submission grounded in your comparable sales,
-            the CLR calculation, and any uploaded condition photos.
+            The letter is a written submission grounded in your comparable
+            sales, the CLR calculation, and any uploaded condition photos. The
+            evidence package adds a cover page, county filing instructions,
+            comp detail pages, and an exhibits checklist.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -286,11 +327,16 @@ export default async function AppealDetailPage({
                   <li key={d.id} className="flex items-center justify-between gap-3">
                     <span className="flex min-w-0 items-center gap-2">
                       <FileText className="size-4 shrink-0 text-muted-foreground" />
-                      <span className="truncate">
-                        {d.original_name ?? d.type}
-                      </span>
+                    <span className="truncate">
+                      {d.original_name ?? d.type}
                     </span>
-                    <Badge variant="secondary">{d.processing_status}</Badge>
+                    {d.needs_review && (
+                      <Badge variant="outline" className="shrink-0 text-amber-700">
+                        Needs review
+                      </Badge>
+                    )}
+                  </span>
+                  <Badge variant="secondary">{d.processing_status}</Badge>
                   </li>
                 ))}
               </ul>

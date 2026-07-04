@@ -2,6 +2,7 @@ import { getPool } from "./db";
 
 export type ParcelSummary = {
   parid: string;
+  county: string;
   full_address: string | null;
   muni_desc: string | null;
   school_desc: string | null;
@@ -22,7 +23,7 @@ export type ParcelSummary = {
 };
 
 const SUMMARY_COLUMNS = `
-  parid, full_address, muni_desc, school_desc, class, class_desc, use_desc,
+  parid, county, full_address, muni_desc, school_desc, class, class_desc, use_desc,
   county_total::float8 as county_total,
   fair_market_total::float8 as fair_market_total,
   finished_living_area::float8 as finished_living_area,
@@ -38,13 +39,15 @@ export async function searchParcels(
   const q = query.trim();
   if (!q) return [];
 
+  // Parcel-ID shapes vary by county (Allegheny: 16 alnum; York: 13 digits).
+  // Try an exact-ID match first and fall through to address search on a miss.
   const asParid = q.replace(/[^0-9A-Za-z]/g, "");
-  if (/^\d{16}$/.test(asParid)) {
+  if (/^\d/.test(asParid) && /^[0-9A-Za-z]{13,16}$/.test(asParid)) {
     const { rows } = await getPool().query<ParcelSummary>(
       `select ${SUMMARY_COLUMNS} from parcels where parid = $1`,
       [asParid]
     );
-    return rows;
+    if (rows.length) return rows;
   }
 
   const { rows } = await getPool().query<ParcelSummary>(

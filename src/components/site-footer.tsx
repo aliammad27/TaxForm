@@ -8,8 +8,8 @@ export function SiteFooter() {
           <div>
             <Logo />
             <p className="mt-2 max-w-xs text-sm text-muted-foreground">
-              Property tax appeals for Allegheny County, built on the
-              county&apos;s own data.
+              Property tax appeals across Pennsylvania, built on the
+              counties&apos; own data.
             </p>
           </div>
           <p className="font-mono text-xs leading-relaxed text-muted-foreground sm:max-w-sm sm:text-right">

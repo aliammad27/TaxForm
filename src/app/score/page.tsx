@@ -1,8 +1,7 @@
 import Link from "next/link";
-import { ArrowRight, Building2, SearchX } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { searchParcels } from "@/lib/parcels";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { EmptyState } from "@/components/empty-state";
 import { SiteHeader } from "@/components/site-header";
@@ -31,13 +30,15 @@ export default async function ScoreSearchPage({
     <div className="flex min-h-screen flex-col">
       <SiteHeader />
 
-      <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-12">
-        <h1 className="font-heading text-3xl font-bold tracking-tight">
+      <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-14">
+        <p className="font-mono text-xs tracking-widest text-muted-foreground uppercase">
+          Free savings score
+        </p>
+        <h1 className="mt-3 font-serif text-4xl tracking-tight">
           Find your property
         </h1>
-        <p className="mt-2 text-muted-foreground">
-          Search by street address or 16-digit parcel ID to get a free savings
-          score.
+        <p className="mt-3 text-muted-foreground">
+          Search by street address or 16-digit parcel ID.
         </p>
 
         <form action="/score" method="GET" className="mt-6 flex gap-2">
@@ -45,7 +46,7 @@ export default async function ScoreSearchPage({
             name="q"
             defaultValue={q ?? ""}
             placeholder="Address or 16-digit parcel ID"
-            className="h-11 bg-background text-base"
+            className="h-11 bg-card text-base"
           />
           <Button type="submit" size="lg" className="h-11">
             Search
@@ -53,13 +54,12 @@ export default async function ScoreSearchPage({
         </form>
 
         {error && (
-          <p className="mt-6 rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+          <p className="mt-6 border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm text-destructive">
             {error}
           </p>
         )}
         {q && !error && results.length === 0 && (
           <EmptyState
-            icon={SearchX}
             title={`No parcels matched \u201c${q}\u201d`}
             description="Try just the street number and name — e.g. “429 Forbes” instead of the full address."
             className="mt-8"
@@ -68,36 +68,37 @@ export default async function ScoreSearchPage({
 
         {results.length > 0 && (
           <>
-            <p className="mt-8 text-sm text-muted-foreground">
-              {results.length} {results.length === 1 ? "match" : "matches"}{" "}
-              for &ldquo;{q}&rdquo;
+            <p className="mt-10 font-mono text-xs tracking-widest text-muted-foreground uppercase">
+              {results.length} {results.length === 1 ? "match" : "matches"} for
+              &ldquo;{q}&rdquo;
             </p>
-            <div className="mt-3 space-y-3">
+            <ul className="mt-3 border-t">
               {results.map((p) => (
-                <Card key={p.parid} className="transition-shadow hover:shadow-md">
-                  <CardContent className="flex flex-wrap items-center justify-between gap-4">
-                    <div className="flex min-w-0 items-center gap-3">
-                      <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-foreground">
-                        <Building2 className="size-5" />
+                <li
+                  key={p.parid}
+                  className="flex flex-wrap items-center justify-between gap-3 border-b py-4"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate font-medium">{p.full_address}</p>
+                    <p className="mt-0.5 text-sm text-muted-foreground">
+                      {p.muni_desc} · {p.class_desc ?? p.class} · Assessed{" "}
+                      <span className="font-mono">
+                        {p.county_total != null
+                          ? `$${Number(p.county_total).toLocaleString()}`
+                          : "—"}
                       </span>
-                      <div className="min-w-0">
-                        <p className="truncate font-medium">{p.full_address}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {p.muni_desc} · {p.class_desc ?? p.class} · Assessed{" "}
-                          {p.county_total != null
-                            ? `$${Number(p.county_total).toLocaleString()}`
-                            : "—"}
-                        </p>
-                      </div>
-                    </div>
-                    <Button render={<Link href={`/score/${p.parid}`} />}>
-                      Get savings score
-                      <ArrowRight data-icon="inline-end" />
-                    </Button>
-                  </CardContent>
-                </Card>
+                    </p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    render={<Link href={`/score/${p.parid}`} />}
+                  >
+                    Get savings score
+                    <ArrowRight data-icon="inline-end" />
+                  </Button>
+                </li>
               ))}
-            </div>
+            </ul>
           </>
         )}
       </main>

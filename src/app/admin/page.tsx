@@ -1,8 +1,8 @@
 import Link from "next/link";
-import { CalendarClock, Check, Gavel, Inbox } from "lucide-react";
+import { CalendarClock, Check } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { STATUS_LABELS, STATUS_ORDER } from "@/lib/appeal-status";
-import { nextAppealWindow } from "@/lib/appeal-window";
+import { DEFAULT_COUNTY, getCountyAdapter } from "@/lib/counties/registry";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -13,6 +13,8 @@ import {
 } from "@/components/ui/card";
 import { EmptyState } from "@/components/empty-state";
 import { PageHeader } from "@/components/page-header";
+import { AssignSelect } from "./assign-select";
+import { createContingencyInvoice } from "./actions";
 import {
   Table,
   TableBody,
@@ -31,10 +33,16 @@ type AdminAppeal = {
   filed_date: string | null;
   hearing_date: string | null;
   letter_document_id: string | null;
+  assigned_admin_id: string | null;
+  outcome_total: number | null;
   clients: { email: string; full_name: string | null; company: string | null; tier: string } | null;
   parcels: { full_address: string | null; class_desc: string | null } | null;
-  documents: { id: string; type: string; processing_status: string }[];
+  documents: { id: string; type: string; processing_status: string; needs_review: boolean }[];
 };
+
+function hasReviewFlag(a: AdminAppeal): boolean {
+  return a.documents.some((d) => d.needs_review);
+}
 
 const TIER_SHORT: Record<string, string> = {
   residential_diy: "DIY",
@@ -65,18 +73,28 @@ function checklist(a: AdminAppeal): { label: string; done: boolean }[] {
 
 export default async function AdminDashboardPage() {
   const supabase = await createClient();
-  const window = nextAppealWindow();
+  const window = await getCountyAdapter(DEFAULT_COUNTY).appealWindow();
 
   const { data } = await supabase
     .from("appeals")
     .select(
-      `id, parid, tax_year, status, filing_deadline, filed_date, hearing_date, letter_document_id,
+      `id, parid, tax_year, status, filing_deadline, filed_date, hearing_date, letter_document_id, assigned_admin_id, outcome_total,
        clients(email, full_name, company, tier),
        parcels(full_address, class_desc),
-       documents(id, type, processing_status)`
+       documents(id, type, processing_status, needs_review)`
     )
     .order("created_at", { ascending: false });
   const appeals = (data ?? []) as unknown as AdminAppeal[];
+
+  const { data: adminRows } = await supabase
+    .from("clients")
+    .select("id, email, full_name")
+    .eq("role", "admin")
+    .order("email");
+  const admins = (adminRows ?? []).map((a) => ({
+    id: a.id,
+    label: a.full_name || a.email,
+  }));
 
   const active = appeals.filter((a) => !["decided", "withdrawn"].includes(a.status));
   const byStatus = new Map<string, number>();
@@ -107,10 +125,10 @@ export default async function AdminDashboardPage() {
         {STATUS_ORDER.map((s) => (
           <Card key={s} size="sm">
             <CardContent className="space-y-1">
-              <p className="text-xs font-medium text-muted-foreground">
+              <p className="font-mono text-xs tracking-wider text-muted-foreground uppercase">
                 {STATUS_LABELS[s]}
               </p>
-              <p className="font-heading text-2xl font-bold">
+              <p className="text-2xl font-semibold tabular-nums">
                 {byStatus.get(s) ?? 0}
               </p>
             </CardContent>
@@ -129,7 +147,6 @@ export default async function AdminDashboardPage() {
           <CardContent>
             {needsFiling.length === 0 ? (
               <EmptyState
-                icon={Inbox}
                 title="Nothing waiting to be filed"
                 className="py-6"
               />
@@ -170,7 +187,6 @@ export default async function AdminDashboardPage() {
           <CardContent>
             {upcomingHearings.length === 0 ? (
               <EmptyState
-                icon={CalendarClock}
                 title="No hearings scheduled"
                 className="py-6"
               />
@@ -199,7 +215,7 @@ export default async function AdminDashboardPage() {
         </CardHeader>
         <CardContent>
           {appeals.length === 0 ? (
-            <EmptyState icon={Gavel} title="No appeals yet" className="py-6" />
+            <EmptyState title="No appeals yet" className="py-6" />
           ) : (
             <Table>
               <TableHeader>
@@ -208,6 +224,7 @@ export default async function AdminDashboardPage() {
                   <TableHead>Client</TableHead>
                   <TableHead>Year</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Assigned to</TableHead>
                   <TableHead>Checklist</TableHead>
                 </TableRow>
               </TableHeader>
@@ -235,7 +252,19 @@ export default async function AdminDashboardPage() {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <div className="flex flex-wrap gap-1">
+                      <AssignSelect
+                        appealId={a.id}
+                        assignedAdminId={a.assigned_admin_id}
+                        admins={admins}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap items-center gap-1">
+                        {hasReviewFlag(a) && (
+                          <Badge variant="outline" className="text-xs text-amber-700">
+                            Review
+                          </Badge>
+                        )}
                         {checklist(a).map((c) => (
                           <Badge
                             key={c.label}
@@ -246,6 +275,20 @@ export default async function AdminDashboardPage() {
                             {c.label}
                           </Badge>
                         ))}
+                        {a.status === "decided" &&
+                          a.outcome_total != null &&
+                          (a.clients?.tier === "commercial_contingency" ||
+                            a.clients?.tier === "full_service") && (
+                            <form action={createContingencyInvoice}>
+                              <input type="hidden" name="appeal_id" value={a.id} />
+                              <button
+                                type="submit"
+                                className="text-xs font-medium text-primary underline-offset-2 hover:underline"
+                              >
+                                Invoice
+                              </button>
+                            </form>
+                          )}
                       </div>
                     </TableCell>
                   </TableRow>
