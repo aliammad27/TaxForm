@@ -1,8 +1,17 @@
 import Link from "next/link";
+import { Building2 } from "lucide-react";
 import { requireClient } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/empty-state";
+import { PageHeader } from "@/components/page-header";
 import { ParcelSearch } from "./parcel-search";
 import { removeProperty } from "./actions";
 import {
@@ -40,11 +49,17 @@ export default async function PropertiesPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Properties</h1>
+      <PageHeader
+        title="Properties"
+        description="Add parcels you own to score them and start appeals."
+      />
 
       <Card>
         <CardHeader>
           <CardTitle>Add a property</CardTitle>
+          <CardDescription>
+            Search Allegheny County records by address or parcel ID.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <ParcelSearch />
@@ -57,9 +72,11 @@ export default async function PropertiesPage() {
         </CardHeader>
         <CardContent>
           {properties.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              No properties yet. Search above to add one.
-            </p>
+            <EmptyState
+              icon={Building2}
+              title="No properties yet"
+              description="Search above to add your first property."
+            />
           ) : (
             <Table>
               <TableHeader>
@@ -89,7 +106,7 @@ export default async function PropertiesPage() {
                     </TableCell>
                     <TableCell>{p.parcels?.muni_desc}</TableCell>
                     <TableCell>{p.parcels?.class_desc}</TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right font-mono">
                       {p.parcels?.county_total != null
                         ? `$${Number(p.parcels.county_total).toLocaleString()}`
                         : "—"}

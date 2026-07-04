@@ -1,9 +1,19 @@
 import Link from "next/link";
+import { Building2, Gavel, Landmark, Plus, ArrowRight } from "lucide-react";
 import { requireClient } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/empty-state";
+import { PageHeader } from "@/components/page-header";
+import { StatCard } from "@/components/stat-card";
 import { STATUS_LABELS } from "@/lib/appeal-status";
 
 export default async function DashboardPage() {
@@ -27,56 +37,60 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">
-          Welcome{profile.full_name ? `, ${profile.full_name.split(" ")[0]}` : ""}
-        </h1>
+      <PageHeader
+        title={`Welcome${profile.full_name ? `, ${profile.full_name.split(" ")[0]}` : ""}`}
+        description="Track your properties and appeals at a glance."
+      >
         <Button render={<Link href="/dashboard/properties" />}>
+          <Plus data-icon="inline-start" />
           Add a property
         </Button>
-      </div>
+      </PageHeader>
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Properties
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="text-3xl font-bold">{propertyCount ?? 0}</CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Active appeals
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="text-3xl font-bold">{active.length}</CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Total appeals
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="text-3xl font-bold">{appeals?.length ?? 0}</CardContent>
-        </Card>
+        <StatCard
+          label="Properties"
+          value={propertyCount ?? 0}
+          icon={Building2}
+        />
+        <StatCard label="Active appeals" value={active.length} icon={Gavel} />
+        <StatCard
+          label="Total appeals"
+          value={appeals?.length ?? 0}
+          icon={Landmark}
+        />
       </div>
 
       <Card>
         <CardHeader>
           <CardTitle>Recent appeals</CardTitle>
+          <CardDescription>
+            Your five most recently created appeals.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {!appeals?.length ? (
-            <p className="text-sm text-muted-foreground">
-              No appeals yet. Add a property, run its savings score, then start an
-              appeal.
-            </p>
+            <EmptyState
+              icon={Gavel}
+              title="No appeals yet"
+              description="Add a property, run its savings score, then start an appeal."
+            >
+              <Button
+                variant="outline"
+                size="sm"
+                render={<Link href="/dashboard/properties" />}
+              >
+                Add a property
+                <ArrowRight data-icon="inline-end" />
+              </Button>
+            </EmptyState>
           ) : (
             <ul className="divide-y">
               {appeals.map((a) => (
-                <li key={a.id} className="flex items-center justify-between py-3">
+                <li
+                  key={a.id}
+                  className="flex items-center justify-between py-3"
+                >
                   <div>
                     <Link
                       href={`/dashboard/appeals/${a.id}`}
@@ -88,7 +102,9 @@ export default async function DashboardPage() {
                       Tax year {a.tax_year}
                     </p>
                   </div>
-                  <Badge variant="secondary">{STATUS_LABELS[a.status] ?? a.status}</Badge>
+                  <Badge variant="secondary">
+                    {STATUS_LABELS[a.status] ?? a.status}
+                  </Badge>
                 </li>
               ))}
             </ul>

@@ -4,6 +4,7 @@ import { Suspense, useActionState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { signInWithPassword, signInWithMagicLink, type AuthState } from "../actions";
+import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -19,9 +20,9 @@ function LoginForm() {
   const [mlState, mlAction, mlPending] = useActionState(signInWithMagicLink, initialState);
 
   return (
-    <Card className="w-full max-w-md">
+    <Card className="w-full max-w-md shadow-lg">
       <CardHeader>
-        <CardTitle>Sign in</CardTitle>
+        <CardTitle className="text-lg">Welcome back</CardTitle>
         <CardDescription>Access your property tax appeal dashboard</CardDescription>
       </CardHeader>
       <CardContent>
@@ -41,7 +42,7 @@ function LoginForm() {
                 <Label htmlFor="password">Password</Label>
                 <Input id="password" name="password" type="password" required />
               </div>
-              {pwState.error && <p className="text-sm text-red-600">{pwState.error}</p>}
+              {pwState.error && <p className="text-sm text-destructive">{pwState.error}</p>}
               <Button type="submit" className="w-full" disabled={pwPending}>
                 {pwPending ? "Signing in..." : "Sign in"}
               </Button>
@@ -53,8 +54,8 @@ function LoginForm() {
                 <Label htmlFor="ml-email">Email</Label>
                 <Input id="ml-email" name="email" type="email" required />
               </div>
-              {mlState.error && <p className="text-sm text-red-600">{mlState.error}</p>}
-              {mlState.message && <p className="text-sm text-green-700">{mlState.message}</p>}
+              {mlState.error && <p className="text-sm text-destructive">{mlState.error}</p>}
+              {mlState.message && <p className="text-sm text-success">{mlState.message}</p>}
               <Button type="submit" className="w-full" disabled={mlPending}>
                 {mlPending ? "Sending..." : "Email me a sign-in link"}
               </Button>
@@ -63,7 +64,10 @@ function LoginForm() {
         </Tabs>
         <p className="mt-4 text-center text-sm text-muted-foreground">
           No account?{" "}
-          <Link href="/signup" className="underline">
+          <Link
+            href="/signup"
+            className="font-medium text-primary underline underline-offset-2"
+          >
             Sign up
           </Link>
         </p>
@@ -74,7 +78,12 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <main className="flex min-h-screen items-center justify-center bg-muted/40 p-4">
+    <main className="relative flex min-h-screen flex-col items-center justify-center gap-6 bg-muted/40 p-4">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(50rem_25rem_at_50%_-10%,--alpha(var(--color-primary)/8%),transparent)]"
+      />
+      <Logo className="relative" />
       <Suspense>
         <LoginForm />
       </Suspense>

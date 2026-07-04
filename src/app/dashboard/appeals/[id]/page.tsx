@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ArrowLeft, FileText } from "lucide-react";
 import { requireClient } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { computeSavingsScore } from "@/lib/savings";
@@ -9,9 +10,22 @@ import { updateAppealStatus } from "../actions";
 import { LetterButton } from "./letter-button";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const usd = (n: number) => `$${Math.round(n).toLocaleString()}`;
 
@@ -55,17 +69,19 @@ export default async function AppealDetailPage({
       <div>
         <Link
           href="/dashboard/appeals"
-          className="text-sm text-muted-foreground hover:underline"
+          className="inline-flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
         >
-          &larr; Appeals
+          <ArrowLeft className="size-3.5" />
+          Appeals
         </Link>
-        <div className="mt-2 flex items-start justify-between">
+        <div className="mt-3 flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-bold">
+            <h1 className="font-heading text-2xl font-bold tracking-tight">
               {parcel?.full_address ?? appeal.parid}
             </h1>
-            <p className="text-sm text-muted-foreground">
-              {parcel?.muni_desc} · Tax year {appeal.tax_year} · Parcel {appeal.parid}
+            <p className="mt-1 text-sm text-muted-foreground">
+              {parcel?.muni_desc} · Tax year {appeal.tax_year} · Parcel{" "}
+              {appeal.parid}
             </p>
           </div>
           <Badge>{STATUS_LABELS[appeal.status] ?? appeal.status}</Badge>
@@ -76,27 +92,40 @@ export default async function AppealDetailPage({
         <Card>
           <CardHeader>
             <CardTitle>Case value</CardTitle>
+            <CardDescription>
+              What the numbers say your appeal is worth.
+            </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-2 text-sm">
+          <CardContent className="space-y-2.5 text-sm">
             {score ? (
               <>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Current assessment</span>
-                  <span className="font-medium">{usd(score.current_assessed)}</span>
+                <div className="flex justify-between gap-4">
+                  <span className="text-muted-foreground">
+                    Current assessment
+                  </span>
+                  <span className="font-mono font-medium">
+                    {usd(score.current_assessed)}
+                  </span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Estimated market value</span>
-                  <span className="font-medium">{usd(score.estimated_fmv)}</span>
+                <div className="flex justify-between gap-4">
+                  <span className="text-muted-foreground">
+                    Estimated market value
+                  </span>
+                  <span className="font-mono font-medium">
+                    {usd(score.estimated_fmv)}
+                  </span>
                 </div>
-                <div className="flex justify-between">
+                <div className="flex justify-between gap-4">
                   <span className="text-muted-foreground">
                     Target assessed value (CLR {(score.clr * 100).toFixed(2)}%)
                   </span>
-                  <span className="font-medium">{usd(score.implied_assessed)}</span>
+                  <span className="font-mono font-medium">
+                    {usd(score.implied_assessed)}
+                  </span>
                 </div>
-                <div className="flex justify-between border-t pt-2">
+                <div className="flex justify-between gap-4 border-t pt-2.5">
                   <span className="font-medium">Estimated annual savings</span>
-                  <span className="font-bold">
+                  <span className="font-mono font-bold text-success">
                     {usd(score.estimated_annual_savings)}
                   </span>
                 </div>
@@ -112,28 +141,41 @@ export default async function AppealDetailPage({
         <Card>
           <CardHeader>
             <CardTitle>Outcome prediction</CardTitle>
+            <CardDescription>
+              Modeled on historical county appeal decisions.
+            </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-2 text-sm">
+          <CardContent className="space-y-2.5 text-sm">
             {prediction ? (
               <>
-                <div className="flex justify-between">
+                <div className="flex justify-between gap-4">
                   <span className="text-muted-foreground">
                     Probability of a reduction
                   </span>
-                  <span className="font-bold">
+                  <span className="font-mono font-bold">
                     {(prediction.probability_reduction * 100).toFixed(0)}%
                   </span>
                 </div>
-                <div className="flex justify-between">
+                <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                  <div
+                    className="h-full rounded-full bg-primary"
+                    style={{
+                      width: `${Math.round(prediction.probability_reduction * 100)}%`,
+                    }}
+                  />
+                </div>
+                <div className="flex justify-between gap-4 pt-1">
                   <span className="text-muted-foreground">
                     Expected assessment reduction
                   </span>
-                  <span className="font-medium">
+                  <span className="font-mono font-medium">
                     {(prediction.expected_reduction_pct * 100).toFixed(1)}%
                   </span>
                 </div>
                 <p className="pt-2 text-xs text-muted-foreground">
-                  Modeled on {prediction.training_note ?? "historical BPAAR dispositions"}.
+                  Modeled on{" "}
+                  {prediction.training_note ?? "historical BPAAR dispositions"}
+                  .
                 </p>
               </>
             ) : (
@@ -149,12 +191,12 @@ export default async function AppealDetailPage({
       <Card>
         <CardHeader>
           <CardTitle>Appeal letter</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <p className="text-sm text-muted-foreground">
+          <CardDescription>
             Generates a written submission grounded in your comparable sales,
             the CLR calculation, and any uploaded condition photos.
-          </p>
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
           <LetterButton appealId={appeal.id} />
         </CardContent>
       </Card>
@@ -169,18 +211,18 @@ export default async function AppealDetailPage({
               <input type="hidden" name="id" value={appeal.id} />
               <div className="space-y-1">
                 <Label htmlFor="status">Status</Label>
-                <select
-                  id="status"
-                  name="status"
-                  defaultValue={appeal.status}
-                  className="w-full rounded-md border bg-transparent px-3 py-2 text-sm"
-                >
-                  {STATUS_ORDER.map((s) => (
-                    <option key={s} value={s}>
-                      {STATUS_LABELS[s]}
-                    </option>
-                  ))}
-                </select>
+                <Select name="status" defaultValue={appeal.status}>
+                  <SelectTrigger id="status" className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {STATUS_ORDER.map((s) => (
+                      <SelectItem key={s} value={s}>
+                        {STATUS_LABELS[s]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-1">
                 <Label htmlFor="hearing_date">Hearing date</Label>
@@ -204,7 +246,7 @@ export default async function AppealDetailPage({
                 Update
               </Button>
             </form>
-            <dl className="mt-4 space-y-1 text-sm text-muted-foreground">
+            <dl className="mt-4 space-y-1.5 border-t pt-4 text-sm text-muted-foreground">
               <div className="flex justify-between">
                 <dt>Filing deadline</dt>
                 <dd>{appeal.filing_deadline ?? "—"}</dd>
@@ -230,7 +272,10 @@ export default async function AppealDetailPage({
               <p className="text-sm text-muted-foreground">
                 No documents yet. Upload rent rolls, T-12s, or condition photos
                 from the{" "}
-                <Link href="/dashboard/documents" className="underline">
+                <Link
+                  href="/dashboard/documents"
+                  className="font-medium text-primary underline underline-offset-2"
+                >
                   documents page
                 </Link>
                 .
@@ -238,8 +283,13 @@ export default async function AppealDetailPage({
             ) : (
               <ul className="space-y-2 text-sm">
                 {documents.map((d) => (
-                  <li key={d.id} className="flex items-center justify-between">
-                    <span>{d.original_name ?? d.type}</span>
+                  <li key={d.id} className="flex items-center justify-between gap-3">
+                    <span className="flex min-w-0 items-center gap-2">
+                      <FileText className="size-4 shrink-0 text-muted-foreground" />
+                      <span className="truncate">
+                        {d.original_name ?? d.type}
+                      </span>
+                    </span>
                     <Badge variant="secondary">{d.processing_status}</Badge>
                   </li>
                 ))}

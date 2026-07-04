@@ -26,7 +26,7 @@ export function ProcessButton({ documentId }: { documentId: string }) {
       <Button size="sm" variant="outline" onClick={process} disabled={state === "working"}>
         {state === "working" ? "Extracting..." : "Extract data"}
       </Button>
-      {state === "error" && <span className="text-xs text-red-600">failed</span>}
+      {state === "error" && <span className="text-xs text-destructive">failed</span>}
     </div>
   );
 }

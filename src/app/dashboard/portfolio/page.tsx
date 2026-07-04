@@ -1,10 +1,21 @@
 import Link from "next/link";
+import {
+  Building2,
+  ChartNoAxesCombined,
+  CircleDollarSign,
+  Download,
+  Gavel,
+  Landmark,
+} from "lucide-react";
 import { requireClient } from "@/lib/auth";
 import { getPortfolio } from "@/lib/portfolio";
 import { STATUS_LABELS } from "@/lib/appeal-status";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { EmptyState } from "@/components/empty-state";
+import { PageHeader } from "@/components/page-header";
+import { StatCard } from "@/components/stat-card";
 import {
   Table,
   TableBody,
@@ -34,52 +45,34 @@ export default async function PortfolioPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Portfolio analytics</h1>
+      <PageHeader
+        title="Portfolio analytics"
+        description="Assessment exposure and appeal opportunity across every property you track."
+      >
         <Button variant="outline" render={<a href="/api/portfolio/export" />}>
+          <Download data-icon="inline-start" />
           Export CSV
         </Button>
-      </div>
+      </PageHeader>
 
-      <div className="grid gap-4 sm:grid-cols-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Total assessed value
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="text-2xl font-bold">
-            {usd(totals.assessed)}
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Projected annual savings
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="text-2xl font-bold text-green-700">
-            {usd(totals.savings)}
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Properties scored
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="text-2xl font-bold">
-            {totals.scored}/{rows.length}
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Under appeal
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="text-2xl font-bold">{totals.appealing}</CardContent>
-        </Card>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <StatCard
+          label="Total assessed value"
+          value={usd(totals.assessed)}
+          icon={Landmark}
+        />
+        <StatCard
+          label="Projected annual savings"
+          value={usd(totals.savings)}
+          icon={CircleDollarSign}
+          valueClassName="text-success"
+        />
+        <StatCard
+          label="Properties scored"
+          value={`${totals.scored}/${rows.length}`}
+          icon={ChartNoAxesCombined}
+        />
+        <StatCard label="Under appeal" value={totals.appealing} icon={Gavel} />
       </div>
 
       <Card>
@@ -88,13 +81,19 @@ export default async function PortfolioPage() {
         </CardHeader>
         <CardContent>
           {rows.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              No properties yet.{" "}
-              <Link href="/dashboard/properties" className="underline">
+            <EmptyState
+              icon={Building2}
+              title="No properties yet"
+              description="Add properties to build your portfolio view."
+            >
+              <Button
+                variant="outline"
+                size="sm"
+                render={<Link href="/dashboard/properties" />}
+              >
                 Add properties
-              </Link>{" "}
-              to build your portfolio.
-            </p>
+              </Button>
+            </EmptyState>
           ) : (
             <Table>
               <TableHeader>
@@ -123,25 +122,25 @@ export default async function PortfolioPage() {
                         </span>
                       )}
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right font-mono">
                       {usd(r.current_assessed)}
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right font-mono">
                       {r.estimated_fmv != null ? (
                         usd(r.estimated_fmv)
                       ) : (
                         <Link
                           href={`/score/${r.parid}`}
-                          className="text-sm underline"
+                          className="font-sans text-sm text-primary underline underline-offset-2"
                         >
                           Run score
                         </Link>
                       )}
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right font-mono">
                       {usd(r.estimated_annual_savings)}
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right font-mono">
                       {r.probability != null
                         ? `${(r.probability * 100).toFixed(0)}%`
                         : "—"}
