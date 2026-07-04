@@ -71,6 +71,11 @@ export default async function ScorePage({
             label="Est. annual savings"
             value={hasCase ? usd(score.estimated_annual_savings) : "$0"}
             valueClassName={hasCase ? "text-success" : undefined}
+            hint={
+              score.millage?.source === "actual"
+                ? `Based on your municipality's combined millage of ${score.millage.mills} mills.`
+                : "Estimate — assumes ~25 mills combined millage; actual millage varies by municipality."
+            }
           />
           <StatCard
             label="Success probability"
@@ -83,6 +88,11 @@ export default async function ScorePage({
                     className={`block h-full ${bar}`}
                     style={{ width: `${Math.round(score.probability * 100)}%` }}
                   />
+                </span>
+                <span className="block">
+                  {score.probability_basis === "county_history"
+                    ? `Based on ${score.county} County's historical appeal decisions.`
+                    : "General estimate — local decision data not yet available."}
                 </span>
               </span>
             }
@@ -102,12 +112,44 @@ export default async function ScorePage({
             </CardDescription>
           </CardHeader>
           <CardContent className="text-sm">
-            <div className="flex justify-between gap-4 py-2">
-              <span className="text-muted-foreground">
-                Estimated fair market value (from comparable sales)
-              </span>
-              <span className="font-mono">{usd(score.estimated_fmv)}</span>
-            </div>
+            {score.valuation?.income_fmv ? (
+              <>
+                <div className="flex justify-between gap-4 py-2">
+                  <span className="text-muted-foreground">
+                    Sales-comparison value (from comparable sales)
+                    {score.valuation.selected === "comp" && " — used"}
+                  </span>
+                  <span className="font-mono">
+                    {usd(score.valuation.comp_fmv)}
+                  </span>
+                </div>
+                <div className="flex justify-between gap-4 border-t border-dashed py-2">
+                  <span className="text-muted-foreground">
+                    Income-approach value (NOI &divide; cap rate
+                    {score.valuation.cap_rate
+                      ? ` of ${(score.valuation.cap_rate * 100).toFixed(1)}%`
+                      : ""}
+                    ){score.valuation.selected === "income" && " — used"}
+                  </span>
+                  <span className="font-mono">
+                    {usd(score.valuation.income_fmv)}
+                  </span>
+                </div>
+                <div className="flex justify-between gap-4 border-t border-dashed py-2">
+                  <span className="text-muted-foreground">
+                    Estimated fair market value (lower of the two approaches)
+                  </span>
+                  <span className="font-mono">{usd(score.estimated_fmv)}</span>
+                </div>
+              </>
+            ) : (
+              <div className="flex justify-between gap-4 py-2">
+                <span className="text-muted-foreground">
+                  Estimated fair market value (from comparable sales)
+                </span>
+                <span className="font-mono">{usd(score.estimated_fmv)}</span>
+              </div>
+            )}
             <div className="flex justify-between gap-4 border-t border-dashed py-2">
               <span className="text-muted-foreground">
                 &times; Common Level Ratio ({(score.clr * 100).toFixed(2)}%)
@@ -133,7 +175,9 @@ export default async function ScorePage({
               </span>
             </div>
             <p className="pt-3 text-xs text-muted-foreground">
-              Savings assume a combined millage of ~25 mills.{" "}
+              {score.millage?.source === "actual"
+                ? `Savings use your municipality's combined county + municipal + school millage of ${score.millage.mills} mills. `
+                : "Savings are an estimate: they assume a combined county + municipal + school millage of ~25 mills. Your actual millage varies by municipality and school district. "}
               {score.comp_result.narrative}
             </p>
           </CardContent>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { use, useActionState } from "react";
 import Link from "next/link";
 import { signUp, type AuthState } from "../actions";
 import { Logo } from "@/components/logo";
@@ -18,7 +18,12 @@ import {
 
 const initialState: AuthState = {};
 
-export default function SignupPage() {
+export default function SignupPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ ref?: string }>;
+}) {
+  const { ref } = use(searchParams);
   const [state, action, pending] = useActionState(signUp, initialState);
 
   return (
@@ -28,11 +33,12 @@ export default function SignupPage() {
         <CardHeader>
           <CardTitle className="text-lg">Create an account</CardTitle>
           <CardDescription>
-            Start appealing your Allegheny County property assessment
+            Start appealing your Pennsylvania property assessment
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form action={action} className="space-y-4">
+            {ref && <input type="hidden" name="referral_code" value={ref} />}
             <div className="space-y-2">
               <Label htmlFor="full_name">Full name</Label>
               <Input id="full_name" name="full_name" required />

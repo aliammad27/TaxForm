@@ -57,6 +57,7 @@ type DocRow = {
   parid: string | null;
   original_name: string | null;
   processing_status: string;
+  needs_review: boolean;
   extracted_json: unknown;
   created_at: string;
 };
@@ -73,7 +74,7 @@ export default async function DocumentsPage() {
   const [{ data: docsData }, { data: propsData }] = await Promise.all([
     supabase
       .from("documents")
-      .select("id, type, parid, original_name, processing_status, extracted_json, created_at")
+      .select("id, type, parid, original_name, processing_status, needs_review, extracted_json, created_at")
       .order("created_at", { ascending: false }),
     supabase.from("client_properties").select("parid, parcels(full_address)"),
   ]);
@@ -130,6 +131,11 @@ export default async function DocumentsPage() {
                       </p>
                     </div>
                     <div className="flex shrink-0 items-center gap-3">
+                      {d.needs_review && (
+                        <Badge variant="outline" className="text-amber-700">
+                          Needs review
+                        </Badge>
+                      )}
                       <Badge
                         variant={
                           d.processing_status === "processed"

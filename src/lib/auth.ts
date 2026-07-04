@@ -8,6 +8,7 @@ export type ClientProfile = {
   company: string | null;
   tier: "residential_diy" | "commercial_contingency" | "full_service";
   role: "client" | "admin";
+  referral_code: string | null;
 };
 
 /** Returns the signed-in user's client profile, redirecting to /login if absent. */
@@ -20,7 +21,7 @@ export async function requireClient(): Promise<ClientProfile> {
 
   const { data: profile } = await supabase
     .from("clients")
-    .select("id, email, full_name, company, tier, role")
+    .select("id, email, full_name, company, tier, role, referral_code")
     .eq("id", user.id)
     .single();
 

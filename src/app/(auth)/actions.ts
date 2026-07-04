@@ -39,6 +39,7 @@ export async function signUp(
 ): Promise<AuthState> {
   const supabase = await createClient();
   const tier = String(formData.get("tier") || "residential_diy");
+  const referralCode = String(formData.get("referral_code") || "").trim();
   const { error } = await supabase.auth.signUp({
     email: String(formData.get("email")),
     password: String(formData.get("password")),
@@ -46,6 +47,8 @@ export async function signUp(
       data: {
         full_name: String(formData.get("full_name") || ""),
         tier,
+        // The handle_new_user trigger resolves this to referred_by.
+        ...(referralCode ? { referral_code: referralCode } : {}),
       },
     },
   });

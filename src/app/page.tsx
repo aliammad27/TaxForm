@@ -150,7 +150,8 @@ export default async function LandingPage() {
               </div>
               <div className="border-t bg-muted/50 px-5 py-3">
                 <p className="font-mono text-xs text-muted-foreground">
-                  ≈ ${annualSavings.toLocaleString()}/yr back at 25 mills,
+                  ≈ ${annualSavings.toLocaleString()}/yr back at an assumed 25
+                  mills (estimate — actual millage varies by municipality),
                   every year until reassessment
                 </p>
               </div>

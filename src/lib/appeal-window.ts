@@ -1,7 +1,13 @@
 /**
  * Allegheny County annual appeal window: appeals for tax year Y are filed
- * roughly July 1 - September 1 of year Y-1 (per County Ordinance 06-24-OR the
- * deadline has been September 1/2 in recent cycles).
+ * July 1 - September 1 of year Y-1 (per County Council ordinance 13056-24).
+ *
+ * Verified July 2026 against the county's own pages
+ * (alleghenycounty.us > Property Assessments and Real Estate > Appeals):
+ * tax year 2027 appeals are accepted July 1, 2026 - September 1, 2026; the
+ * tax year 2026 deadline was September 2, 2025 (the deadline slips a day
+ * when September 1 falls on Labor Day). Exact per-year dates live in the
+ * appeal_windows table; this function is the Allegheny fallback rule.
  */
 export function nextAppealWindow(today = new Date()): {
   taxYear: number;

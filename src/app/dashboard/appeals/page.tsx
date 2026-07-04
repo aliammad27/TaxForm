@@ -3,7 +3,7 @@ import { CalendarClock } from "lucide-react";
 import { requireClient } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { STATUS_LABELS } from "@/lib/appeal-status";
-import { nextAppealWindow } from "@/lib/appeal-window";
+import { DEFAULT_COUNTY, getCountyAdapter } from "@/lib/counties/registry";
 import { createAppeal } from "./actions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -43,7 +43,7 @@ type PropertyRow = {
 export default async function AppealsPage() {
   await requireClient();
   const supabase = await createClient();
-  const window = nextAppealWindow();
+  const window = await getCountyAdapter(DEFAULT_COUNTY).appealWindow();
 
   const [{ data: appealsData }, { data: propsData }] = await Promise.all([
     supabase

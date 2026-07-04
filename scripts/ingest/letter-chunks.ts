@@ -6,7 +6,11 @@
  *   npx tsx scripts/ingest/letter-chunks.ts
  */
 import { getPool } from "./lib";
-import { textEmbedding, toVectorLiteral } from "../../src/lib/embeddings";
+import {
+  embedTexts,
+  isVoyageConfigured,
+  toVectorLiteral,
+} from "../../src/lib/embeddings";
 
 const CHUNKS: Array<{ source: string; title: string; content: string }> = [
   {
@@ -73,13 +77,24 @@ const CHUNKS: Array<{ source: string; title: string; content: string }> = [
 
 async function main() {
   const pool = getPool();
-  for (const chunk of CHUNKS) {
-    const embedding = toVectorLiteral(textEmbedding(`${chunk.title}\n${chunk.content}`));
+  console.log(
+    `embedding ${CHUNKS.length} chunks with ${isVoyageConfigured() ? "Voyage" : "hashing fallback"}`
+  );
+  const embeddings = await embedTexts(
+    CHUNKS.map((c) => `${c.title}\n${c.content}`),
+    "document"
+  );
+  for (let i = 0; i < CHUNKS.length; i++) {
+    const chunk = CHUNKS[i];
+    // Upsert on title so switching embedding models re-embeds in place.
     await pool.query(
       `insert into letter_chunks (source, title, content, embedding)
-       select $1, $2, $3, $4::vector
-       where not exists (select 1 from letter_chunks where title = $2)`,
-      [chunk.source, chunk.title, chunk.content, embedding]
+       values ($1, $2, $3, $4::vector)
+       on conflict (title) do update set
+         source = excluded.source,
+         content = excluded.content,
+         embedding = excluded.embedding`,
+      [chunk.source, chunk.title, chunk.content, toVectorLiteral(embeddings[i])]
     );
   }
   const { rows } = await pool.query(`select count(*) from letter_chunks`);

@@ -54,6 +54,7 @@ export default async function PortfolioPage() {
           label="Projected annual savings"
           value={usd(totals.savings)}
           valueClassName="text-success"
+          hint="Estimate — assumes ~25 mills combined millage per property."
         />
         <StatCard
           label="Properties scored"
@@ -87,7 +88,9 @@ export default async function PortfolioPage() {
                   <TableHead>Property</TableHead>
                   <TableHead className="text-right">Assessed</TableHead>
                   <TableHead className="text-right">Est. market value</TableHead>
-                  <TableHead className="text-right">Annual savings</TableHead>
+                  <TableHead className="text-right">
+                    Annual savings (est.)
+                  </TableHead>
                   <TableHead className="text-right">Probability</TableHead>
                   <TableHead>Appeal</TableHead>
                 </TableRow>

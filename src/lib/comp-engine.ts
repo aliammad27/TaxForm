@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { getPool } from "./db";
 import { getParcel, type ParcelSummary } from "./parcels";
+import { getCountyAdapter } from "./counties/registry";
 import { CLAUDE_MODEL, getAnthropic, isAnthropicConfigured } from "./anthropic";
 
 export type CompCandidate = {
@@ -44,7 +45,8 @@ export type CompResult = {
 
 export async function getCompCandidates(
   parid: string,
-  limit = 20
+  limit = 20,
+  maxSaleAgeYears = 3
 ): Promise<CompCandidate[]> {
   const { rows } = await getPool().query<CompCandidate>(
     `select parid, full_address, muni_desc, school_desc, class,
@@ -55,8 +57,8 @@ export async function getCompCandidates(
             sale_date::text as sale_date,
             sale_price::float8 as sale_price,
             distance
-     from comp_candidates($1, $2)`,
-    [parid, limit]
+     from comp_candidates($1, $2, $3)`,
+    [parid, limit, maxSaleAgeYears]
   );
   return rows;
 }
@@ -69,26 +71,73 @@ function monthsSince(dateStr: string): number {
 }
 
 /**
+ * Derives a percentage FMV adjustment from the condition-evidence text block
+ * produced by getConditionContext (vision.ts). Comps are assumed to be in
+ * average condition, so below-average subject condition discounts the
+ * estimate. Parses the overall-condition label plus finding severities.
+ */
+function conditionAdjustmentPct(conditionContext: string): number {
+  const text = conditionContext.toLowerCase();
+
+  const overallMap: Record<string, number> = {
+    excellent: 0.02,
+    good: 0.01,
+    average: 0,
+    fair: -0.03,
+    poor: -0.08,
+    "very poor": -0.14,
+  };
+  const overalls = [
+    ...text.matchAll(/overall condition (excellent|good|average|fair|poor|very poor)/g),
+  ].map((m) => overallMap[m[1]] ?? 0);
+  const overallPct = overalls.length
+    ? overalls.reduce((s, v) => s + v, 0) / overalls.length
+    : 0;
+
+  const severityPct =
+    -0.005 * (text.match(/\(minor/g)?.length ?? 0) +
+    -0.015 * (text.match(/\(moderate/g)?.length ?? 0) +
+    -0.04 * (text.match(/\(major/g)?.length ?? 0);
+
+  return Math.max(-0.25, Math.min(0.05, overallPct + severityPct));
+}
+
+function isCommercial(subject: ParcelSummary): boolean {
+  const text = `${subject.class_desc ?? ""} ${subject.use_desc ?? ""}`.toUpperCase();
+  return subject.class === "C" || text.includes("COMMERCIAL");
+}
+
+/**
  * Deterministic sales-comparison fallback used when no Anthropic key is
- * configured (and as a sanity anchor for the Claude estimate). Standard
- * residential adjustments: time, living area, and bath count.
+ * configured (and as a sanity anchor for the Claude estimate).
+ * Residential subjects get standard time / living-area / bath adjustments;
+ * commercial subjects get a price-per-building-sqft model (recency-adjusted),
+ * since bath counts and 50%-of-ppsf marginal-area logic don't transfer.
  */
 function heuristicEstimate(
   subject: ParcelSummary,
-  candidates: CompCandidate[]
+  candidates: CompCandidate[],
+  conditionContext?: string
 ): Omit<CompResult, "subject" | "method"> {
   const usable = candidates.filter((c) => c.sale_price && c.sale_price > 10000);
   const top = usable.slice(0, 5);
   if (!top.length) {
-    // No comps: fall back to the county's own FMV opinion.
-    const fmv = subject.fair_market_total ?? subject.county_total ?? 0;
+    // No comps: fall back to the county's own full-market opinion when it
+    // publishes one (e.g. Allegheny's fair_market_total). Never fall back to
+    // the assessed value — in base-year counties that's a fraction of market
+    // value, and using it as FMV would fabricate an automatic "reduction".
+    const fmv = subject.fair_market_total ?? 0;
     return {
       estimated_fmv: fmv,
       comps: [],
-      narrative:
-        "No recent arm's-length comparable sales were found; the estimate falls back to the county's stated fair market value.",
+      narrative: fmv
+        ? "No recent arm's-length comparable sales were found; the estimate falls back to the county's stated fair market value."
+        : "No recent arm's-length comparable sales were found and the county publishes no full market value, so no defensible estimate is available.",
+      condition_context: conditionContext,
     };
   }
+
+  const commercial = isCommercial(subject);
 
   const comps: AdjustedComp[] = top.map((c) => {
     const adjustments: { reason: string; amount: number }[] = [];
@@ -104,26 +153,46 @@ function heuristicEstimate(
       value += timeAdj;
     }
 
-    if (subject.finished_living_area && c.finished_living_area) {
-      const ppsf = c.sale_price! / c.finished_living_area;
-      const sqftAdj = Math.round(
-        (subject.finished_living_area - c.finished_living_area) * ppsf * 0.5
-      );
-      if (sqftAdj) {
-        adjustments.push({
-          reason: `Living area difference (${Math.round(subject.finished_living_area - c.finished_living_area)} sqft at 50% of $${ppsf.toFixed(0)}/sqft)`,
-          amount: sqftAdj,
-        });
-        value += sqftAdj;
+    if (commercial) {
+      // Commercial: value scales ~linearly with building area, so scale the
+      // time-adjusted price by the full sqft ratio (capped, since the comp
+      // pool is already filtered to 0.6x-1.4x of the subject's area).
+      if (subject.finished_living_area && c.finished_living_area) {
+        const ratio = Math.max(
+          0.6,
+          Math.min(1.4, subject.finished_living_area / c.finished_living_area)
+        );
+        const areaAdj = Math.round(value * (ratio - 1));
+        if (areaAdj) {
+          adjustments.push({
+            reason: `Building area difference (${Math.round(c.finished_living_area).toLocaleString()} -> ${Math.round(subject.finished_living_area).toLocaleString()} sqft at $${(value / c.finished_living_area).toFixed(0)}/sqft)`,
+            amount: areaAdj,
+          });
+          value += areaAdj;
+        }
       }
-    }
+    } else {
+      if (subject.finished_living_area && c.finished_living_area) {
+        const ppsf = c.sale_price! / c.finished_living_area;
+        const sqftAdj = Math.round(
+          (subject.finished_living_area - c.finished_living_area) * ppsf * 0.5
+        );
+        if (sqftAdj) {
+          adjustments.push({
+            reason: `Living area difference (${Math.round(subject.finished_living_area - c.finished_living_area)} sqft at 50% of $${ppsf.toFixed(0)}/sqft)`,
+            amount: sqftAdj,
+          });
+          value += sqftAdj;
+        }
+      }
 
-    const subjBaths = (subject.full_baths ?? 0) + 0.5 * (subject.half_baths ?? 0);
-    const compBaths = (c.full_baths ?? 0) + 0.5 * (c.half_baths ?? 0);
-    const bathAdj = Math.round((subjBaths - compBaths) * 5000);
-    if (bathAdj) {
-      adjustments.push({ reason: "Bathroom count difference", amount: bathAdj });
-      value += bathAdj;
+      const subjBaths = (subject.full_baths ?? 0) + 0.5 * (subject.half_baths ?? 0);
+      const compBaths = (c.full_baths ?? 0) + 0.5 * (c.half_baths ?? 0);
+      const bathAdj = Math.round((subjBaths - compBaths) * 5000);
+      if (bathAdj) {
+        adjustments.push({ reason: "Bathroom count difference", amount: bathAdj });
+        value += bathAdj;
+      }
     }
 
     return {
@@ -138,14 +207,26 @@ function heuristicEstimate(
   });
 
   const totalWeight = comps.reduce((s, c) => s + c.weight, 0);
-  const estimated = Math.round(
+  let estimated = Math.round(
     comps.reduce((s, c) => s + c.adjusted_value * c.weight, 0) / totalWeight
   );
+
+  let conditionNote = "";
+  if (conditionContext) {
+    const pct = conditionAdjustmentPct(conditionContext);
+    if (pct !== 0) {
+      estimated = Math.round(estimated * (1 + pct));
+      conditionNote = ` A ${(Math.abs(pct) * 100).toFixed(1)}% ${pct < 0 ? "downward" : "upward"} adjustment was applied based on documented property condition evidence.`;
+    }
+  }
 
   return {
     estimated_fmv: estimated,
     comps,
-    narrative: `Estimate derived from ${comps.length} recent arm's-length sales in ${subject.muni_desc ?? "the same municipality"}, adjusted for sale date, living area, and bathroom count, weighted by similarity.`,
+    narrative: commercial
+      ? `Estimate derived from ${comps.length} recent arm's-length commercial sales in ${subject.muni_desc ?? "the same municipality"}, adjusted for sale date and building area on a price-per-square-foot basis, weighted by similarity.${conditionNote}`
+      : `Estimate derived from ${comps.length} recent arm's-length sales in ${subject.muni_desc ?? "the same municipality"}, adjusted for sale date, living area, and bathroom count, weighted by similarity.${conditionNote}`,
+    condition_context: conditionContext,
   };
 }
 
@@ -173,8 +254,7 @@ async function claudeEstimate(
   const response = await getAnthropic().messages.create({
     model: CLAUDE_MODEL,
     max_tokens: 3000,
-    system:
-      "You are a residential/commercial real-estate valuation analyst preparing a sales-comparison estimate of fair market value for an Allegheny County (PA) property tax assessment appeal. Select the strongest comparables, apply standard dollar adjustments (sale date/market conditions, living area, baths, condition, grade, lot), and be conservative: this estimate must be defensible before the Board of Property Assessment Appeals and Review.",
+    system: `You are a residential/commercial real-estate valuation analyst preparing a sales-comparison estimate of fair market value for a ${subject.county} County (PA) property tax assessment appeal. Select the strongest comparables, apply standard dollar adjustments (sale date/market conditions, living area, baths, condition, grade, lot), and be conservative: this estimate must be defensible before the county's assessment appeals board.`,
     tools: [
       {
         name: "submit_valuation",
@@ -274,7 +354,8 @@ export async function estimateFmv(
   const subject = await getParcel(parid);
   if (!subject) return null;
 
-  const candidates = await getCompCandidates(parid, 20);
+  const saleYears = getCountyAdapter(subject.county).compSaleYears ?? 3;
+  const candidates = await getCompCandidates(parid, 20, saleYears);
 
   if (isAnthropicConfigured()) {
     try {
@@ -289,5 +370,9 @@ export async function estimateFmv(
     }
   }
 
-  return { subject, method: "heuristic", ...heuristicEstimate(subject, candidates) };
+  return {
+    subject,
+    method: "heuristic",
+    ...heuristicEstimate(subject, candidates, options.conditionContext),
+  };
 }

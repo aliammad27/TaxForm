@@ -102,6 +102,23 @@ export default async function DashboardPage() {
           )}
         </CardContent>
       </Card>
+
+      {profile.referral_code && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Refer a neighbor</CardTitle>
+            <CardDescription>
+              Overassessment runs street by street — if your appeal has legs,
+              your neighbors&apos; probably do too. Share your link:
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <code className="block w-fit rounded-md bg-muted px-3 py-2 font-mono text-sm">
+              {`${process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"}/signup?ref=${profile.referral_code}`}
+            </code>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

@@ -9,6 +9,12 @@ export function SiteHeader() {
         <Logo />
         <nav className="flex items-center gap-5">
           <Link
+            href="/counties"
+            className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+          >
+            Counties
+          </Link>
+          <Link
             href="/login"
             className="text-sm text-muted-foreground transition-colors hover:text-foreground"
           >
