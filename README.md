@@ -1,8 +1,30 @@
-# TaxForm — Allegheny County Property Tax Appeal Platform
+# TaxForm (Equarra): Property Tax Appeals for Allegheny County, PA
 
-AI-powered property tax appeals for Allegheny County, PA. Built on the
-structural over-assessment wedge created by the county's 2012 base year and
-the falling Common Level Ratio (50.14% for tax year 2026).
+**Live demo:** https://tax-form-coral.vercel.app
+
+![Home page](docs/screenshots/home.png)
+
+## What it is
+
+TaxForm is an AI-powered tool that helps Pennsylvania homeowners find out whether they are over-assessed and builds an evidence-backed appeal package for them. The live site runs under the working brand name Equarra.
+
+## The problem
+
+Allegheny County still assesses property against a **2012 base year**. Each year the state publishes a **Common Level Ratio (CLR)** that shows how far assessments have drifted from current market value. For tax year 2026 it is **50.14%**. When a home's assessed value is higher than `market value × CLR`, the owner is paying tax on value the property doesn't have. Because of how the base year and the falling ratio interact, many homeowners are over-assessed and never find out.
+
+## How it works
+
+1. **Look up a property** by address or parcel ID, using public county parcel and sales data (WPRDC).
+2. **Comparable sales**: SQL and pgvector pull candidate comps, then Claude ranks them and applies dollar adjustments.
+3. **CLR math** turns market value into a target assessment and an estimated yearly savings.
+4. **Win probability**: a model trained on past appeal outcomes (BPAAR, 2015 to 2026) estimates the odds.
+5. **Appeal package**: a generated letter and evidence PDF, with county-specific filing instructions and deadline reminders.
+
+![County over-assessment map](docs/screenshots/counties.png)
+
+## Status
+
+Paused. As I understood the rules, appeals like this in Pennsylvania generally need an attorney to represent the owner, and that made the full-service model hard to run here. Other states don't have that requirement, so I may come back to this for one of them.
 
 ## Stack
 
@@ -14,6 +36,7 @@ the falling Common Level Ratio (50.14% for tax year 2026).
 | File storage | Supabase Storage (`documents`, `letters` buckets) |
 | AI/LLM | Anthropic Claude (comps, letters, extraction, vision) |
 | Background jobs | Supabase Edge Functions + cron |
+| Monitoring | Sentry |
 
 ## Features
 
